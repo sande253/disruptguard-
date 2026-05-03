@@ -48,9 +48,9 @@ export default function DashboardPage() {
             )}
 
             {/* MAIN SECTION: 2-column layout - Map (65%) + Decision Panel (35%) */}
-            <div className="grid gap-6 lg:grid-cols-12">
+            <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
               {/* LEFT: Large Route Map - Primary Focus */}
-              <div className="lg:col-span-8">
+              <div className="lg:col-span-2">
                 <IndiaRouteMap 
                   source={route?.origin ?? null} 
                   destination={route?.destination ?? null} 
@@ -59,7 +59,7 @@ export default function DashboardPage() {
               </div>
 
               {/* RIGHT: Decision Stack */}
-              <div className="lg:col-span-4 space-y-4">
+              <div className="lg:col-span-1 flex flex-col gap-4">
                 {/* A. Risk Summary Card */}
                 <RiskSummaryCard />
 
