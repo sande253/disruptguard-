@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
 import { RouteInputPanel, RouteEmptyState } from "@/components/dashboard/route-input-panel"
+import { IndiaRouteMap } from "@/components/dashboard/india-route-map"
 import { KPICards } from "@/components/dashboard/kpi-cards"
 import { RiskForecastChart } from "@/components/dashboard/risk-forecast-chart"
 import { RiskMap } from "@/components/dashboard/risk-map"
@@ -41,6 +42,13 @@ export default function DashboardPage() {
 
         {/* Route Input Panel */}
         <RouteInputPanel onAnalyze={handleAnalyze} isLoading={isAnalyzing} />
+
+        {/* India Route Map */}
+        <IndiaRouteMap 
+          source={currentRoute?.source ?? null} 
+          destination={currentRoute?.destination ?? null} 
+          isLoading={isAnalyzing}
+        />
 
         {/* Show empty state or dashboard content */}
         {!hasAnalyzed ? (
