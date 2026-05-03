@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { usePathname } from "next/navigation"
+import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   LayoutDashboard,
@@ -18,15 +20,16 @@ import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", active: true },
-  { icon: Route, label: "Routes", active: false },
-  { icon: Factory, label: "Suppliers", active: false },
-  { icon: FlaskConical, label: "Simulation", active: false },
-  { icon: Bell, label: "Alerts", active: false },
-  { icon: Settings, label: "Settings", active: false },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/" },
+  { icon: Route, label: "Routes", href: "/routes" },
+  { icon: Factory, label: "Suppliers", href: "/suppliers" },
+  { icon: FlaskConical, label: "Simulation", href: "/simulation" },
+  { icon: Bell, label: "Alerts", href: "/alerts" },
+  { icon: Settings, label: "Settings", href: "/settings" },
 ]
 
 export function Sidebar() {
+  const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
 
   return (
@@ -58,39 +61,43 @@ export function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-1 p-3">
-          {menuItems.map((item) => (
-            <Tooltip key={item.label}>
-              <TooltipTrigger asChild>
-                <button
-                  className={cn(
-                    "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                    item.active
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                  )}
-                >
-                  <item.icon className="h-5 w-5 shrink-0" />
-                  <AnimatePresence>
-                    {!collapsed && (
-                      <motion.span
-                        initial={{ opacity: 0, width: 0 }}
-                        animate={{ opacity: 1, width: "auto" }}
-                        exit={{ opacity: 0, width: 0 }}
-                        className="overflow-hidden whitespace-nowrap"
-                      >
-                        {item.label}
-                      </motion.span>
+          {menuItems.map((item) => {
+            const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
+            return (
+              <Tooltip key={item.label}>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                     )}
-                  </AnimatePresence>
-                </button>
-              </TooltipTrigger>
-              {collapsed && (
-                <TooltipContent side="right" className="bg-popover text-popover-foreground">
-                  {item.label}
-                </TooltipContent>
-              )}
-            </Tooltip>
-          ))}
+                  >
+                    <item.icon className="h-5 w-5 shrink-0" />
+                    <AnimatePresence>
+                      {!collapsed && (
+                        <motion.span
+                          initial={{ opacity: 0, width: 0 }}
+                          animate={{ opacity: 1, width: "auto" }}
+                          exit={{ opacity: 0, width: 0 }}
+                          className="overflow-hidden whitespace-nowrap"
+                        >
+                          {item.label}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </Link>
+                </TooltipTrigger>
+                {collapsed && (
+                  <TooltipContent side="right" className="bg-popover text-popover-foreground">
+                    {item.label}
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            )
+          })}
         </nav>
 
         {/* Collapse toggle */}
