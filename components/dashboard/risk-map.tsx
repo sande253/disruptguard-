@@ -1,9 +1,12 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface RouteSegment {
@@ -84,6 +87,11 @@ const riskColors = {
 
 export function RiskMap() {
   const [hoveredSegment, setHoveredSegment] = useState<RouteSegment | null>(null)
+  const router = useRouter()
+
+  const handleRouteClick = () => {
+    router.push("/routes/hyderabad-chennai")
+  }
 
   return (
     <motion.div
@@ -97,6 +105,15 @@ export function RiskMap() {
             <CardTitle className="text-lg font-semibold text-foreground">
               Route Risk Map
             </CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs text-muted-foreground hover:text-foreground"
+              onClick={handleRouteClick}
+            >
+              View Details
+              <ExternalLink className="h-3 w-3 ml-1" />
+            </Button>
             <div className="flex gap-4 text-xs">
               <div className="flex items-center gap-1.5">
                 <div className="h-2.5 w-2.5 rounded-full bg-risk-low" />
@@ -114,7 +131,10 @@ export function RiskMap() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="relative h-[320px] w-full rounded-xl bg-secondary/50 overflow-hidden">
+          <div 
+              className="relative h-[320px] w-full rounded-xl bg-secondary/50 overflow-hidden cursor-pointer group"
+              onClick={handleRouteClick}
+            >
             {/* Simplified India map outline */}
             <svg
               viewBox="0 0 400 340"
@@ -199,6 +219,13 @@ export function RiskMap() {
                 </text>
               </g>
             </svg>
+
+            {/* Click overlay hint */}
+            <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center justify-center">
+              <span className="text-sm font-medium text-primary bg-background/90 px-3 py-1.5 rounded-full">
+                Click to view route details
+              </span>
+            </div>
 
             {/* Tooltip */}
             {hoveredSegment && (
