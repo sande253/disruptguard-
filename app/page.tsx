@@ -2,6 +2,7 @@
 
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
 import { RouteInputPanel, RouteEmptyState } from "@/components/dashboard/route-input-panel"
+import { OptimizationSelector } from "@/components/dashboard/optimization-selector"
 import { IndiaRouteMap } from "@/components/dashboard/india-route-map"
 import { DecisionInsightCard } from "@/components/dashboard/decision-insight-card"
 import { AlertsCompact } from "@/components/dashboard/alerts-compact"
@@ -34,6 +35,9 @@ export default function DashboardPage() {
 
         {/* Route Input Panel - Always at top */}
         <RouteInputPanel onAnalyze={handleAnalyze} isLoading={isAnalyzing} />
+
+        {/* Optimization Mode Selector - Below route input */}
+        <OptimizationSelector />
 
         {/* Show empty state or dashboard content */}
         {!hasAnalyzed ? (

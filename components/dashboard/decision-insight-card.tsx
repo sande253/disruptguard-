@@ -15,7 +15,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { useRoute, formatRoute } from "@/contexts/route-context"
+import { useRoute, formatRoute, OptimizationMode } from "@/contexts/route-context"
+
+const modeLabels: Record<OptimizationMode, string> = {
+  balanced: "Balanced Route",
+  fastest: "Fastest Route",
+  "lowest-risk": "Lowest Risk Route",
+  cheapest: "Cheapest Route",
+}
 
 interface RiskDriver {
   id: string
@@ -63,12 +70,12 @@ const impactColors = {
 }
 
 export function DecisionInsightCard() {
-  const { route } = useRoute()
+  const { route, optimizationMode, metrics } = useRoute()
   const routeLabel = formatRoute(route)
   
-  // Dynamic risk data based on route
-  const delayProbability = 64
-  const delayRange = "6-10 hours"
+  // Dynamic risk data based on optimization mode
+  const delayProbability = metrics.delayProbability
+  const delayRange = metrics.expectedDelay
   const confidence = 87
 
   const getRiskLevel = (score: number) => {
@@ -99,9 +106,14 @@ export function DecisionInsightCard() {
                 <CardTitle className="text-lg font-semibold text-foreground">
                   Route Decision Insight
                 </CardTitle>
-                {routeLabel && (
-                  <p className="text-xs text-muted-foreground mt-0.5">{routeLabel}</p>
-                )}
+                <div className="flex items-center gap-2 mt-0.5">
+                  {routeLabel && (
+                    <span className="text-xs text-muted-foreground">{routeLabel}</span>
+                  )}
+                  <Badge variant="outline" className="text-[10px] border-primary/30 text-primary bg-primary/5">
+                    {modeLabels[optimizationMode]}
+                  </Badge>
+                </div>
               </div>
             </div>
             <Badge 
@@ -115,16 +127,16 @@ export function DecisionInsightCard() {
 
         <CardContent className="space-y-5">
           {/* Key Metrics Row */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {/* Delay Probability */}
             <div className="space-y-2">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <AlertTriangle className="h-3.5 w-3.5" />
-                Delay Probability
+                Delay Risk
               </div>
               <div className="flex items-baseline gap-1">
-                <span className={cn("text-3xl font-bold", risk.color)}>{delayProbability}</span>
-                <span className={cn("text-lg font-medium", risk.color)}>%</span>
+                <span className={cn("text-2xl font-bold", risk.color)}>{delayProbability}</span>
+                <span className={cn("text-sm font-medium", risk.color)}>%</span>
               </div>
               <Progress value={delayProbability} className="h-1.5 bg-secondary" />
             </div>
@@ -135,18 +147,28 @@ export function DecisionInsightCard() {
                 <Clock className="h-3.5 w-3.5" />
                 Expected Delay
               </div>
-              <div className="text-2xl font-bold text-foreground">{delayRange}</div>
-              <p className="text-[10px] text-muted-foreground">Based on current conditions</p>
+              <div className="text-xl font-bold text-foreground">{delayRange}</div>
+              <p className="text-[10px] text-muted-foreground">Under current conditions</p>
             </div>
 
-            {/* Confidence */}
+            {/* Estimated Cost */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="text-xs">₹</span>
+                Estimated Cost
+              </div>
+              <div className="text-xl font-bold text-foreground">{metrics.estimatedCost}</div>
+              <p className="text-[10px] text-muted-foreground">Total route cost</p>
+            </div>
+
+            {/* Travel Time */}
             <div className="space-y-2">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <TrendingUp className="h-3.5 w-3.5" />
-                Confidence Score
+                Travel Time
               </div>
-              <div className="text-2xl font-bold text-risk-low">{confidence}%</div>
-              <p className="text-[10px] text-muted-foreground">Model accuracy level</p>
+              <div className="text-xl font-bold text-foreground">{metrics.estimatedTime}</div>
+              <p className="text-[10px] text-muted-foreground">{confidence}% confidence</p>
             </div>
           </div>
 
