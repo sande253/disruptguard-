@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
 import { RouteInputPanel, RouteEmptyState } from "@/components/dashboard/route-input-panel"
 import { IndiaRouteMap } from "@/components/dashboard/india-route-map"
@@ -10,21 +9,13 @@ import { RiskMap } from "@/components/dashboard/risk-map"
 import { AlertsFeed } from "@/components/dashboard/alerts-feed"
 import { AIRecommendations } from "@/components/dashboard/ai-recommendations"
 import { SupplierTable } from "@/components/dashboard/supplier-table"
+import { useRoute } from "@/contexts/route-context"
 
 export default function DashboardPage() {
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [hasAnalyzed, setHasAnalyzed] = useState(false)
-  const [currentRoute, setCurrentRoute] = useState<{ source: string; destination: string; mode: string } | null>(null)
+  const { route, isAnalyzing, hasAnalyzed, analyzeRoute } = useRoute()
 
   const handleAnalyze = (source: string, destination: string, mode: string) => {
-    setIsAnalyzing(true)
-    setCurrentRoute({ source, destination, mode })
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsAnalyzing(false)
-      setHasAnalyzed(true)
-    }, 1500)
+    analyzeRoute(source, destination, mode as "Road" | "Rail" | "Sea")
   }
 
   return (
@@ -45,8 +36,8 @@ export default function DashboardPage() {
 
         {/* India Route Map */}
         <IndiaRouteMap 
-          source={currentRoute?.source ?? null} 
-          destination={currentRoute?.destination ?? null} 
+          source={route?.origin ?? null} 
+          destination={route?.destination ?? null} 
           isLoading={isAnalyzing}
         />
 
@@ -56,9 +47,9 @@ export default function DashboardPage() {
         ) : (
           <>
             {/* Route info banner */}
-            {currentRoute && (
+            {route && (
               <div className="text-sm text-muted-foreground">
-                Showing risks for: <span className="font-medium text-foreground">{currentRoute.source}</span> → <span className="font-medium text-foreground">{currentRoute.destination}</span> via <span className="capitalize text-foreground">{currentRoute.mode}</span>
+                Showing risks for: <span className="font-medium text-foreground">{route.origin}</span> → <span className="font-medium text-foreground">{route.destination}</span> via <span className="capitalize text-foreground">{route.mode}</span>
               </div>
             )}
 

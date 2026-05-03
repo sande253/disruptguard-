@@ -112,33 +112,21 @@ export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaR
     if (!mapContainer.current) return
     if (map.current) return
 
-    console.log("[v0] Initializing Mapbox map...")
-    console.log("[v0] Container dimensions:", mapContainer.current.offsetWidth, mapContainer.current.offsetHeight)
-
     mapboxgl.accessToken = "pk.eyJ1Ijoic2FuZGUyNTMiLCJhIjoiY21vcGVyZWFiMHd6NDJwczZ6NnZtZHExdyJ9.yRf2XiwCwRB1hk_FDdOnQw"
 
-    try {
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: "mapbox://styles/mapbox/dark-v11",
-        center: INDIA_CENTER,
-        zoom: DEFAULT_ZOOM,
-        attributionControl: false,
-      })
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: "mapbox://styles/mapbox/dark-v11",
+      center: INDIA_CENTER,
+      zoom: DEFAULT_ZOOM,
+      attributionControl: false,
+    })
 
-      map.current.addControl(new mapboxgl.NavigationControl(), "top-right")
+    map.current.addControl(new mapboxgl.NavigationControl(), "top-right")
 
-      map.current.on("load", () => {
-        console.log("[v0] Mapbox map loaded successfully")
-        setMapLoaded(true)
-      })
-
-      map.current.on("error", (e) => {
-        console.log("[v0] Mapbox error:", e)
-      })
-    } catch (error) {
-      console.log("[v0] Error initializing map:", error)
-    }
+    map.current.on("load", () => {
+      setMapLoaded(true)
+    })
 
     return () => {
       map.current?.remove()

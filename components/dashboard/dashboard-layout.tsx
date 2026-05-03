@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { Sidebar } from "./sidebar"
 import { Navbar } from "./navbar"
 import { AIAssistantPanel } from "./ai-assistant-panel"
+import { useRoute, formatRoute } from "@/contexts/route-context"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -13,6 +14,8 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarWidth, setSidebarWidth] = useState(240)
   const [isAIOpen, setIsAIOpen] = useState(false)
+  const { route } = useRoute()
+  const routeLabel = formatRoute(route)
 
   useEffect(() => {
     // Listen for sidebar collapse/expand
@@ -49,7 +52,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <AIAssistantPanel
         isOpen={isAIOpen}
         onClose={() => setIsAIOpen(false)}
-        currentRoute="Hyderabad → Chennai"
+        currentRoute={routeLabel || "No route selected"}
       />
     </div>
   )

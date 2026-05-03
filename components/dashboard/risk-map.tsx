@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useRoute } from "@/contexts/route-context"
 
 interface RouteSegment {
   id: string
@@ -88,9 +89,13 @@ const riskColors = {
 export function RiskMap() {
   const [hoveredSegment, setHoveredSegment] = useState<RouteSegment | null>(null)
   const router = useRouter()
+  const { route } = useRoute()
 
   const handleRouteClick = () => {
-    router.push("/routes/hyderabad-chennai")
+    if (route) {
+      const routeId = `${route.origin.toLowerCase()}-${route.destination.toLowerCase()}`
+      router.push(`/routes/${routeId}`)
+    }
   }
 
   return (
@@ -209,13 +214,13 @@ export function RiskMap() {
               <g>
                 <circle cx="78" cy="150" r="8" fill="hsl(var(--primary))" />
                 <text x="78" y="135" textAnchor="middle" className="fill-foreground text-xs font-medium">
-                  Hyderabad
+                  {route?.origin || "Origin"}
                 </text>
               </g>
               <g>
                 <circle cx="350" cy="300" r="8" fill="hsl(var(--primary))" />
                 <text x="350" y="285" textAnchor="middle" className="fill-foreground text-xs font-medium">
-                  Chennai
+                  {route?.destination || "Destination"}
                 </text>
               </g>
             </svg>

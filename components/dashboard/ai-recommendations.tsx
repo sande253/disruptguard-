@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { useRoute, formatRoute } from "@/contexts/route-context"
 
 interface Recommendation {
   id: string
@@ -58,6 +59,9 @@ const typeColors = {
 }
 
 export function AIRecommendations() {
+  const { route } = useRoute()
+  const routeLabel = formatRoute(route)
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -66,13 +70,20 @@ export function AIRecommendations() {
     >
       <Card className="border-border bg-card">
         <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <div className="rounded-lg bg-primary/10 p-2">
-              <Sparkles className="h-4 w-4 text-primary" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-primary/10 p-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+              </div>
+              <CardTitle className="text-lg font-semibold text-foreground">
+                AI Recommendations
+              </CardTitle>
             </div>
-            <CardTitle className="text-lg font-semibold text-foreground">
-              AI Recommendations
-            </CardTitle>
+            {routeLabel && (
+              <Badge variant="outline" className="text-xs border-border text-muted-foreground">
+                For {routeLabel}
+              </Badge>
+            )}
           </div>
         </CardHeader>
         <CardContent className="space-y-3">

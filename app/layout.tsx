@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { RouteProvider } from '@/contexts/route-context'
 import './globals.css'
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -23,7 +24,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-background">
       <body className={`${inter.variable} font-sans antialiased`}>
-        {children}
+        <RouteProvider>
+          {children}
+        </RouteProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

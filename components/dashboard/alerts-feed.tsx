@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
+import { useRoute, formatRoute } from "@/contexts/route-context"
 
 interface Alert {
   id: string
@@ -83,6 +84,8 @@ const severityStyles = {
 export function AlertsFeed() {
   const [expandedAlert, setExpandedAlert] = useState<string | null>(null)
   const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([])
+  const { route } = useRoute()
+  const routeLabel = formatRoute(route)
 
   const visibleAlerts = alerts.filter((alert) => !dismissedAlerts.includes(alert.id))
 
@@ -104,9 +107,16 @@ export function AlertsFeed() {
       <Card className="border-border bg-card h-full">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold text-foreground">
-              Risk Alerts
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-lg font-semibold text-foreground">
+                Risk Alerts
+              </CardTitle>
+              {routeLabel && (
+                <Badge variant="outline" className="text-xs border-border text-muted-foreground hidden sm:inline-flex">
+                  {routeLabel}
+                </Badge>
+              )}
+            </div>
             <Badge variant="outline" className="text-xs border-border text-muted-foreground">
               {visibleAlerts.length} Active
             </Badge>

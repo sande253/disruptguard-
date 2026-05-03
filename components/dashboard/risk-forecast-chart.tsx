@@ -10,13 +10,8 @@ import {
   YAxis,
 } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { useRoute, formatRoute } from "@/contexts/route-context"
 
 const forecastData = [
   { time: "Now", risk: 35, upper: 42, lower: 28 },
@@ -58,6 +53,9 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 }
 
 export function RiskForecastChart() {
+  const { route } = useRoute()
+  const routeLabel = formatRoute(route)
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -66,31 +64,21 @@ export function RiskForecastChart() {
     >
       <Card className="border-border bg-card">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-lg font-semibold text-foreground">
-            72-Hour Disruption Forecast
-          </CardTitle>
-          <div className="flex gap-2">
-            <Select defaultValue="hyderabad-chennai">
-              <SelectTrigger className="w-[180px] bg-secondary border-border text-foreground">
-                <SelectValue placeholder="Select route" />
-              </SelectTrigger>
-              <SelectContent className="bg-popover text-popover-foreground">
-                <SelectItem value="hyderabad-chennai">Hyderabad → Chennai</SelectItem>
-                <SelectItem value="mumbai-delhi">Mumbai → Delhi</SelectItem>
-                <SelectItem value="bangalore-kolkata">Bangalore → Kolkata</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select defaultValue="road">
-              <SelectTrigger className="w-[120px] bg-secondary border-border text-foreground">
-                <SelectValue placeholder="Mode" />
-              </SelectTrigger>
-              <SelectContent className="bg-popover text-popover-foreground">
-                <SelectItem value="road">Road</SelectItem>
-                <SelectItem value="rail">Rail</SelectItem>
-                <SelectItem value="air">Air</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-3">
+            <CardTitle className="text-lg font-semibold text-foreground">
+              72-Hour Disruption Forecast
+            </CardTitle>
+            {routeLabel && (
+              <Badge variant="outline" className="text-xs border-border text-muted-foreground">
+                {routeLabel}
+              </Badge>
+            )}
           </div>
+          {route && (
+            <Badge className="bg-secondary text-foreground border-border capitalize">
+              {route.mode}
+            </Badge>
+          )}
         </CardHeader>
         <CardContent>
           <div className="h-[300px] w-full">
