@@ -10,19 +10,111 @@ This repository is linked to a [v0](https://v0.app) project. You can continue de
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+ or compatible runtime
+- pnpm (recommended) or npm/yarn
+- Mapbox account and API token
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd disruptguard-
+```
+
+2. Install dependencies:
+```bash
+pnpm install
+# or
+npm install
+# or
+yarn install
+```
+
+3. Set up environment variables:
+```bash
+cp .env.example .env.local
+```
+
+4. Edit `.env.local` and add your Mapbox token:
+```env
+NEXT_PUBLIC_MAPBOX_TOKEN=your_mapbox_token_here
+```
+
+Get your Mapbox token from: https://account.mapbox.com/access-tokens/
+
+### Running the Development Server
 
 ```bash
+pnpm dev
+# or
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+## Project Structure
+
+```
+disruptguard-/
+├── app/                    # Next.js app directory
+│   ├── analytics/         # Analytics dashboard
+│   ├── carbon/            # Carbon tracking
+│   ├── compare/           # Route comparison tool
+│   ├── inventory/         # Inventory management
+│   ├── reports/           # Report generation
+│   ├── settings/          # Settings page
+│   ├── simulation/        # Disruption simulation
+│   ├── suppliers/         # Supplier management
+│   └── tracking/          # Shipment tracking
+├── components/            # React components
+│   ├── dashboard/         # Dashboard-specific components
+│   ├── simulation/        # Simulation components
+│   ├── suppliers/         # Supplier components
+│   └── ui/                # Reusable UI components (shadcn/ui)
+├── contexts/              # React contexts
+├── hooks/                 # Custom React hooks
+├── lib/                   # Utility functions
+└── public/                # Static assets
+
+```
+
+## Features
+
+- 🗺️ **Interactive Route Mapping**: Visualize supply chain routes across India with Mapbox integration
+- 📊 **Risk Analytics**: Real-time risk assessment and forecasting
+- 🚚 **Shipment Tracking**: Live tracking of shipments with sensor data
+- 🔄 **Route Comparison**: Compare multiple routes side-by-side
+- 🤖 **AI Recommendations**: AI-powered decision support
+- 📈 **Analytics Dashboard**: Historical data analysis and insights
+- 🌱 **Carbon Tracking**: Monitor and optimize CO2 emissions
+- 👥 **Supplier Management**: Network visualization and risk scoring
+
+## Tech Stack
+
+- **Framework**: Next.js 16.2.4 with React 19
+- **Language**: TypeScript 5.7.3
+- **Styling**: Tailwind CSS 4.2.0
+- **UI Components**: Radix UI + shadcn/ui
+- **Animations**: Framer Motion
+- **Charts**: Recharts
+- **Maps**: Mapbox GL
+- **Forms**: React Hook Form + Zod
+
+## Recent Fixes (2026-05-03)
+
+- ✅ Fixed critical runtime error in tracking page (missing useEffect import)
+- ✅ Moved Mapbox token to environment variables for security
+- ✅ Fixed memory leak in dashboard layout
+- ✅ Improved route comparison cost parsing logic
+
+See [CHANGELOG.md](./CHANGELOG.md) for detailed changes.
 
 ## Learn More
 

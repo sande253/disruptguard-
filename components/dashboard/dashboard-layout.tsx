@@ -19,20 +19,21 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   useEffect(() => {
     // Listen for sidebar collapse/expand
+    const sidebar = document.querySelector("aside")
+    if (!sidebar) return
+
     const observer = new MutationObserver(() => {
-      const sidebar = document.querySelector("aside")
       if (sidebar) {
         setSidebarWidth(sidebar.offsetWidth)
       }
     })
 
-    const sidebar = document.querySelector("aside")
-    if (sidebar) {
-      observer.observe(sidebar, { attributes: true, attributeFilter: ["style"] })
-      setSidebarWidth(sidebar.offsetWidth)
-    }
+    observer.observe(sidebar, { attributes: true, attributeFilter: ["style"] })
+    setSidebarWidth(sidebar.offsetWidth)
 
-    return () => observer.disconnect()
+    return () => {
+      observer.disconnect()
+    }
   }, [])
 
   return (

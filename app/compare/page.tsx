@@ -98,12 +98,18 @@ export default function ComparePage() {
   }))
 
   // Find best in each category
-  const bestTime = routeMetrics.reduce((best, r) => 
-    parseInt(r.metrics.time) < parseInt(best.metrics.time) ? r : best
-  )
-  const bestCost = routeMetrics.reduce((best, r) => 
-    parseInt(r.metrics.cost.replace(/[^\d]/g, "")) < parseInt(best.metrics.cost.replace(/[^\d]/g, "")) ? r : best
-  )
+  const bestTime = routeMetrics.reduce((best, r) => {
+    const currentTime = parseInt(r.metrics.time.replace(/[^\d]/g, "")) || 0
+    const bestTimeValue = parseInt(best.metrics.time.replace(/[^\d]/g, "")) || 0
+    return currentTime < bestTimeValue ? r : best
+  })
+  
+  const bestCost = routeMetrics.reduce((best, r) => {
+    const currentCost = parseInt(r.metrics.cost.replace(/[^\d]/g, "")) || 0
+    const bestCostValue = parseInt(best.metrics.cost.replace(/[^\d]/g, "")) || 0
+    return currentCost < bestCostValue ? r : best
+  })
+  
   const bestRisk = routeMetrics.reduce((best, r) => 
     r.metrics.risk < best.metrics.risk ? r : best
   )

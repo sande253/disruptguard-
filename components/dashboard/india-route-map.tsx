@@ -112,7 +112,13 @@ export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaR
     if (!mapContainer.current) return
     if (map.current) return
 
-    mapboxgl.accessToken = "pk.eyJ1Ijoic2FuZGUyNTMiLCJhIjoiY21vcGVyZWFiMHd6NDJwczZ6NnZtZHExdyJ9.yRf2XiwCwRB1hk_FDdOnQw"
+    const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+    if (!token) {
+      console.error("Mapbox token is not configured. Please set NEXT_PUBLIC_MAPBOX_TOKEN in your environment variables.")
+      return
+    }
+
+    mapboxgl.accessToken = token
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
