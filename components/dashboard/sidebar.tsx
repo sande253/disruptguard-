@@ -6,14 +6,18 @@ import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   LayoutDashboard,
-  Route,
   Factory,
   FlaskConical,
-  Bell,
   Settings,
   ChevronLeft,
   ChevronRight,
   Shield,
+  Truck,
+  BarChart3,
+  GitCompare,
+  FileText,
+  Leaf,
+  Package,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -21,10 +25,14 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
-  { icon: Route, label: "Routes", href: "/routes" },
+  { icon: Truck, label: "Tracking", href: "/tracking" },
+  { icon: BarChart3, label: "Analytics", href: "/analytics" },
+  { icon: GitCompare, label: "Compare Routes", href: "/compare" },
   { icon: Factory, label: "Suppliers", href: "/suppliers" },
+  { icon: Package, label: "Inventory", href: "/inventory" },
+  { icon: Leaf, label: "Carbon", href: "/carbon" },
   { icon: FlaskConical, label: "Simulation", href: "/simulation" },
-  { icon: Bell, label: "Alerts", href: "/alerts" },
+  { icon: FileText, label: "Reports", href: "/reports" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ]
 
