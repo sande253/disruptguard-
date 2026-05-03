@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { GoogleMap, useJsApiLoader, DirectionsRenderer } from "@react-google-maps/api"
+import mapboxgl from "mapbox-gl"
+import "mapbox-gl/dist/mapbox-gl.css"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { MapPin, Loader2 } from "lucide-react"
 
@@ -12,167 +13,249 @@ interface IndiaRouteMapProps {
   isLoading?: boolean
 }
 
-const INDIA_CENTER = { lat: 20.5937, lng: 78.9629 }
-const DEFAULT_ZOOM = 5
+// India center coordinates
+const INDIA_CENTER: [number, number] = [78.9629, 20.5937]
+const DEFAULT_ZOOM = 4.5
 
-// Dark map style for consistency with dashboard theme
-const mapStyles = [
-  { elementType: "geometry", stylers: [{ color: "#1e293b" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#1e293b" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#94a3b8" }] },
-  {
-    featureType: "administrative",
-    elementType: "geometry.stroke",
-    stylers: [{ color: "#334155" }],
-  },
-  {
-    featureType: "administrative.land_parcel",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#64748b" }],
-  },
-  {
-    featureType: "poi",
-    elementType: "geometry",
-    stylers: [{ color: "#283548" }],
-  },
-  {
-    featureType: "poi",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#64748b" }],
-  },
-  {
-    featureType: "poi.park",
-    elementType: "geometry.fill",
-    stylers: [{ color: "#1a3a2f" }],
-  },
-  {
-    featureType: "road",
-    elementType: "geometry",
-    stylers: [{ color: "#374151" }],
-  },
-  {
-    featureType: "road",
-    elementType: "geometry.stroke",
-    stylers: [{ color: "#1e293b" }],
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry",
-    stylers: [{ color: "#475569" }],
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry.stroke",
-    stylers: [{ color: "#1e293b" }],
-  },
-  {
-    featureType: "transit",
-    elementType: "geometry",
-    stylers: [{ color: "#2d3748" }],
-  },
-  {
-    featureType: "water",
-    elementType: "geometry",
-    stylers: [{ color: "#0f172a" }],
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#475569" }],
-  },
-]
-
-const containerStyle = {
-  width: "100%",
-  height: "100%",
+// Mock city coordinates for route visualization
+const CITY_COORDINATES: Record<string, [number, number]> = {
+  // Format: [longitude, latitude]
+  "hyderabad": [78.4867, 17.3850],
+  "chennai": [80.2707, 13.0827],
+  "mumbai": [72.8777, 19.0760],
+  "delhi": [77.1025, 28.7041],
+  "bangalore": [77.5946, 12.9716],
+  "bengaluru": [77.5946, 12.9716],
+  "kolkata": [88.3639, 22.5726],
+  "pune": [73.8567, 18.5204],
+  "jaipur": [75.7873, 26.9124],
+  "ahmedabad": [72.5714, 23.0225],
+  "lucknow": [80.9462, 26.8467],
+  "kochi": [76.2673, 9.9312],
+  "cochin": [76.2673, 9.9312],
+  "thiruvananthapuram": [76.9366, 8.5241],
+  "trivandrum": [76.9366, 8.5241],
+  "visakhapatnam": [83.2185, 17.6868],
+  "vizag": [83.2185, 17.6868],
+  "nagpur": [79.0882, 21.1458],
+  "bhopal": [77.4126, 23.2599],
+  "indore": [75.8577, 22.7196],
+  "chandigarh": [76.7794, 30.7333],
+  "guwahati": [91.7362, 26.1445],
+  "surat": [72.8311, 21.1702],
+  "coimbatore": [76.9558, 11.0168],
+  "vadodara": [73.1812, 22.3072],
+  "patna": [85.1376, 25.5941],
+  "ranchi": [85.3096, 23.3441],
+  "bhubaneswar": [85.8245, 20.2961],
+  "goa": [73.8278, 15.4909],
+  "panaji": [73.8278, 15.4909],
+  "new delhi": [77.2090, 28.6139],
 }
 
-const mapOptions: google.maps.MapOptions = {
-  styles: mapStyles,
-  disableDefaultUI: true,
-  zoomControl: true,
-  mapTypeControl: false,
-  streetViewControl: false,
-  fullscreenControl: false,
+// Get coordinates for a city (case insensitive)
+function getCityCoordinates(city: string): [number, number] | null {
+  const normalized = city.toLowerCase().trim()
+  return CITY_COORDINATES[normalized] || null
+}
+
+// Calculate intermediate points for a curved route
+function getRoutePoints(start: [number, number], end: [number, number]): [number, number][] {
+  const points: [number, number][] = []
+  const steps = 50
+  
+  // Calculate midpoint with offset for curve
+  const midLng = (start[0] + end[0]) / 2
+  const midLat = (start[1] + end[1]) / 2
+  
+  // Add slight curve offset based on direction
+  const dx = end[0] - start[0]
+  const dy = end[1] - start[1]
+  const curveOffset = Math.min(Math.abs(dx), Math.abs(dy)) * 0.1
+  
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps
+    // Quadratic bezier curve
+    const lng = (1 - t) * (1 - t) * start[0] + 2 * (1 - t) * t * (midLng + curveOffset) + t * t * end[0]
+    const lat = (1 - t) * (1 - t) * start[1] + 2 * (1 - t) * t * (midLat + curveOffset) + t * t * end[1]
+    points.push([lng, lat])
+  }
+  
+  return points
+}
+
+// Calculate approximate distance between two coordinates in km
+function calculateDistance(start: [number, number], end: [number, number]): number {
+  const R = 6371 // Earth's radius in km
+  const dLat = (end[1] - start[1]) * Math.PI / 180
+  const dLon = (end[0] - start[0]) * Math.PI / 180
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(start[1] * Math.PI / 180) * Math.cos(end[1] * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return Math.round(R * c)
 }
 
 export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaRouteMapProps) {
-  const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null)
-  const [routeLoading, setRouteLoading] = useState(false)
+  const mapContainer = useRef<HTMLDivElement>(null)
+  const map = useRef<mapboxgl.Map | null>(null)
+  const markersRef = useRef<mapboxgl.Marker[]>([])
+  const [mapLoaded, setMapLoaded] = useState(false)
+  const [routeDistance, setRouteDistance] = useState<number | null>(null)
   const [routeError, setRouteError] = useState<string | null>(null)
-  const [map, setMap] = useState<google.maps.Map | null>(null)
-
-  const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-  })
 
   const hasRoute = source && destination
 
-  const onLoad = useCallback((map: google.maps.Map) => {
-    setMap(map)
-  }, [])
-
-  const onUnmount = useCallback(() => {
-    setMap(null)
-  }, [])
-
-  // Fetch directions when source/destination change
+  // Initialize map
   useEffect(() => {
-    if (!isLoaded || !source || !destination) {
-      setDirections(null)
-      setRouteError(null)
+    if (!mapContainer.current || map.current) return
+
+    mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || ""
+
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: "mapbox://styles/mapbox/dark-v11",
+      center: INDIA_CENTER,
+      zoom: DEFAULT_ZOOM,
+      attributionControl: false,
+    })
+
+    map.current.addControl(new mapboxgl.NavigationControl(), "top-right")
+
+    map.current.on("load", () => {
+      setMapLoaded(true)
+    })
+
+    return () => {
+      map.current?.remove()
+      map.current = null
+    }
+  }, [])
+
+  // Draw route when source/destination change
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return
+
+    // Clear previous markers
+    markersRef.current.forEach(marker => marker.remove())
+    markersRef.current = []
+
+    // Remove previous route layer and source
+    if (map.current.getLayer("route-glow")) {
+      map.current.removeLayer("route-glow")
+    }
+    if (map.current.getLayer("route")) {
+      map.current.removeLayer("route")
+    }
+    if (map.current.getSource("route")) {
+      map.current.removeSource("route")
+    }
+
+    // Reset state
+    setRouteError(null)
+    setRouteDistance(null)
+
+    if (!source || !destination) {
+      // Reset to India view
+      map.current.flyTo({
+        center: INDIA_CENTER,
+        zoom: DEFAULT_ZOOM,
+        duration: 1000,
+      })
       return
     }
 
-    setRouteLoading(true)
-    setRouteError(null)
+    const sourceCoords = getCityCoordinates(source)
+    const destCoords = getCityCoordinates(destination)
 
-    const directionsService = new google.maps.DirectionsService()
+    if (!sourceCoords || !destCoords) {
+      setRouteError("City not found. Try: Mumbai, Delhi, Chennai, Hyderabad, Bangalore...")
+      return
+    }
 
-    directionsService.route(
-      {
-        origin: `${source}, India`,
-        destination: `${destination}, India`,
-        travelMode: google.maps.TravelMode.DRIVING,
+    // Calculate distance
+    const distance = calculateDistance(sourceCoords, destCoords)
+    setRouteDistance(distance)
+
+    // Get curved route points
+    const routePoints = getRoutePoints(sourceCoords, destCoords)
+
+    // Add route source
+    map.current.addSource("route", {
+      type: "geojson",
+      data: {
+        type: "Feature",
+        properties: {},
+        geometry: {
+          type: "LineString",
+          coordinates: routePoints,
+        },
       },
-      (result, status) => {
-        setRouteLoading(false)
-        if (status === google.maps.DirectionsStatus.OK && result) {
-          setDirections(result)
-          setRouteError(null)
-          // Fit bounds to show the entire route
-          if (map && result.routes[0]?.bounds) {
-            map.fitBounds(result.routes[0].bounds)
-          }
-        } else {
-          console.error("Directions request failed:", status)
-          setDirections(null)
-          setRouteError("Unable to find route. Try a more specific city name.")
-        }
-      }
-    )
-  }, [isLoaded, source, destination, map])
+    })
 
-  // Show loading or error states
-  const showLoading = isLoading || routeLoading || !isLoaded
+    // Add glow effect layer
+    map.current.addLayer({
+      id: "route-glow",
+      type: "line",
+      source: "route",
+      layout: {
+        "line-join": "round",
+        "line-cap": "round",
+      },
+      paint: {
+        "line-color": "#3b82f6",
+        "line-width": 12,
+        "line-opacity": 0.3,
+        "line-blur": 8,
+      },
+    })
 
-  if (loadError) {
-    return (
-      <Card className="bg-card border-border">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-primary" />
-            India Route Map
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="relative h-[420px] w-full rounded-xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-            <p className="text-sm text-muted-foreground">Failed to load map</p>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
+    // Add main route layer
+    map.current.addLayer({
+      id: "route",
+      type: "line",
+      source: "route",
+      layout: {
+        "line-join": "round",
+        "line-cap": "round",
+      },
+      paint: {
+        "line-color": "#3b82f6",
+        "line-width": 4,
+        "line-opacity": 0.9,
+      },
+    })
+
+    // Add origin marker (blue)
+    const originMarker = new mapboxgl.Marker({
+      color: "#3b82f6",
+    })
+      .setLngLat(sourceCoords)
+      .setPopup(new mapboxgl.Popup().setHTML(`<strong>${source}</strong><br/>Origin`))
+      .addTo(map.current)
+    markersRef.current.push(originMarker)
+
+    // Add destination marker (cyan)
+    const destMarker = new mapboxgl.Marker({
+      color: "#06b6d4",
+    })
+      .setLngLat(destCoords)
+      .setPopup(new mapboxgl.Popup().setHTML(`<strong>${destination}</strong><br/>Destination`))
+      .addTo(map.current)
+    markersRef.current.push(destMarker)
+
+    // Fit bounds to show the entire route
+    const bounds = new mapboxgl.LngLatBounds()
+    bounds.extend(sourceCoords)
+    bounds.extend(destCoords)
+    map.current.fitBounds(bounds, {
+      padding: 80,
+      duration: 1000,
+    })
+  }, [source, destination, mapLoaded])
+
+  const showLoading = isLoading || !mapLoaded
 
   return (
     <Card className="bg-card border-border">
@@ -183,56 +266,25 @@ export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaR
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="relative h-[420px] w-full rounded-xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="relative h-[420px] w-full rounded-xl overflow-hidden bg-slate-900">
+          {/* Map container */}
+          <div ref={mapContainer} className="absolute inset-0" />
+
           <AnimatePresence mode="wait">
-            {showLoading ? (
+            {showLoading && (
               <motion.div
                 key="loading"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 flex items-center justify-center z-20"
+                className="absolute inset-0 flex items-center justify-center z-20 bg-slate-900/80"
               >
                 <div className="flex flex-col items-center gap-3">
                   <Loader2 className="h-8 w-8 text-primary animate-spin" />
                   <p className="text-sm text-muted-foreground">
-                    {!isLoaded ? "Loading map..." : "Analyzing route..."}
+                    {!mapLoaded ? "Loading map..." : "Analyzing route..."}
                   </p>
                 </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="map"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0"
-              >
-                <GoogleMap
-                  mapContainerStyle={containerStyle}
-                  center={INDIA_CENTER}
-                  zoom={DEFAULT_ZOOM}
-                  options={mapOptions}
-                  onLoad={onLoad}
-                  onUnmount={onUnmount}
-                >
-                  {directions && (
-                    <DirectionsRenderer
-                      directions={directions}
-                      options={{
-                        suppressMarkers: false,
-                        polylineOptions: {
-                          strokeColor: "#3b82f6",
-                          strokeWeight: 5,
-                          strokeOpacity: 0.9,
-                        },
-                        markerOptions: {
-                          zIndex: 100,
-                        },
-                      }}
-                    />
-                  )}
-                </GoogleMap>
               </motion.div>
             )}
           </AnimatePresence>
@@ -251,7 +303,7 @@ export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaR
           )}
 
           {/* Empty state overlay */}
-          {!hasRoute && !showLoading && isLoaded && (
+          {!hasRoute && !showLoading && mapLoaded && (
             <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -288,7 +340,7 @@ export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaR
           </div>
 
           {/* Route info badge */}
-          {hasRoute && directions && !showLoading && (
+          {hasRoute && routeDistance && !showLoading && !routeError && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -296,7 +348,7 @@ export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaR
             >
               <p className="text-xs text-slate-400">Route Distance</p>
               <p className="text-sm font-semibold text-white">
-                {directions.routes[0]?.legs[0]?.distance?.text || "N/A"}
+                {routeDistance.toLocaleString()} km
               </p>
             </motion.div>
           )}
