@@ -60,29 +60,46 @@ interface IndiaRouteMapProps {
   isLoading?: boolean
 }
 
-// Accurate India outline SVG path
-const INDIA_PATH = `M 16.5 12 L 18 10.5 L 20 9.5 L 22.5 9 L 25 8.5 L 27.5 7.5 L 30 7 L 32.5 6 L 35 5.5 
-L 37.5 6 L 40 7 L 42 8 L 44 9 L 45.5 10.5 L 47 12 L 48.5 13 L 50 14.5 L 52 15.5 L 54.5 16 
-L 57 16.5 L 59.5 17 L 62 18 L 64.5 19 L 67 20.5 L 69.5 22 L 72 23.5 L 74 25 L 75.5 27 
-L 77 29 L 78 31 L 79 33.5 L 80 36 L 80.5 38.5 L 81 41 L 80.5 43.5 L 79.5 46 L 78 48 
-L 76 49.5 L 74 51 L 72 52 L 70 53 L 68 54.5 L 66 56 L 64.5 58 L 63 60 L 61.5 62.5 
-L 60 65 L 58 67 L 55.5 69 L 53 71 L 50.5 73 L 48 75 L 45 76.5 L 42 78 L 39 79 
-L 36 80 L 33 81 L 30 81.5 L 27 82 L 24 82.5 L 21 83 L 18 84 L 15 85 L 12 86 
-L 10 87 L 8.5 88.5 L 7 90 L 6 91.5 L 5.5 93 L 6 94 L 7 95 L 8.5 95.5 L 10.5 95 
-L 12 94 L 13 92.5 L 14 91 L 15.5 89.5 L 17 88 L 18 86 L 18.5 84 L 18.5 82 
-L 18 80 L 17 78 L 15.5 76 L 14 74 L 12.5 72 L 11 70 L 10 68 L 9 66 L 8 64 
-L 7.5 62 L 7 60 L 6.5 58 L 6 55.5 L 5.5 53 L 5 50.5 L 5 48 L 5.5 45.5 L 6 43 
-L 6.5 40.5 L 7 38 L 7.5 35.5 L 8 33 L 9 30.5 L 10 28 L 11.5 25.5 L 13 23 
-L 14.5 20.5 L 15.5 18 L 16 15 L 16.5 12 Z`
+// Recognizable India outline - simplified but accurate shape
+const INDIA_PATH = `
+  M 25 8 
+  C 28 5, 35 4, 42 6
+  L 48 8 L 52 7 L 55 8
+  C 60 10, 65 12, 70 18
+  L 75 22 L 78 28
+  C 80 32, 82 38, 82 42
+  L 83 48 L 82 52
+  C 80 58, 76 62, 72 66
+  L 68 70 L 62 74
+  C 56 78, 50 82, 45 86
+  L 40 90 L 35 92
+  C 30 94, 25 95, 22 93
+  L 20 88 L 22 82
+  C 24 76, 22 70, 18 65
+  L 14 58 L 12 50
+  C 10 42, 12 34, 15 26
+  L 18 20 L 22 14
+  C 23 11, 24 9, 25 8
+  Z
+`
 
-// Kashmir region path (northern disputed area)
-const KASHMIR_PATH = `M 16.5 12 L 18 10.5 L 20 8 L 23 6 L 26 4.5 L 29 3.5 L 32 3 L 35 3.5 
-L 37 5 L 35 5.5 L 32.5 6 L 30 7 L 27.5 7.5 L 25 8.5 L 22.5 9 L 20 9.5 L 18 10.5 L 16.5 12`
+// Kashmir region (northern area with dashed border)
+const KASHMIR_PATH = `
+  M 25 8
+  C 22 4, 30 2, 38 3
+  L 45 4 L 48 6 L 48 8 L 42 6
+  C 35 4, 28 5, 25 8
+`
 
-// Northeast region path
-const NORTHEAST_PATH = `M 77 29 L 79 27 L 81 25 L 84 24 L 87 23.5 L 90 24 L 92.5 25.5 
-L 94 27.5 L 95 30 L 95.5 32.5 L 95 35 L 93.5 37 L 91 38.5 L 88 39.5 L 85 40 
-L 82 40.5 L 80 41 L 80.5 38.5 L 80 36 L 79 33.5 L 78 31 L 77 29`
+// Northeast region (Seven Sisters)
+const NORTHEAST_PATH = `
+  M 82 42
+  L 88 38 L 92 40 L 95 44
+  L 96 50 L 94 54
+  L 90 56 L 86 54 L 84 50
+  L 83 48 L 82 42
+  Z
+`
 
 export function IndiaRouteMap({ source, destination, isLoading }: IndiaRouteMapProps) {
   const [hoveredSegment, setHoveredSegment] = useState<RouteSegment | null>(null)
@@ -191,46 +208,77 @@ export function IndiaRouteMap({ source, destination, isLoading }: IndiaRouteMapP
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 flex items-center justify-center p-6"
+                className="absolute inset-0 flex items-center justify-center p-4"
               >
                 <svg
                   viewBox="0 0 100 100"
-                  className="w-full h-full max-w-[380px]"
+                  className="w-[70%] h-[85%] max-w-[320px]"
                   preserveAspectRatio="xMidYMid meet"
+                  style={{ filter: "drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))" }}
                 >
+                  {/* Glow effect behind India */}
+                  <defs>
+                    <filter id="india-glow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="2" result="blur" />
+                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                    <linearGradient id="india-fill" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#334155" />
+                      <stop offset="100%" stopColor="#1e293b" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Shadow/glow layer */}
+                  <path
+                    d={INDIA_PATH}
+                    fill="#3b82f6"
+                    opacity={0.15}
+                    filter="url(#india-glow)"
+                    transform="translate(0.5, 0.5)"
+                  />
+
                   {/* India outline - main body */}
                   <motion.path
                     d={INDIA_PATH}
-                    fill="hsl(var(--secondary))"
-                    stroke="hsl(var(--border))"
-                    strokeWidth="0.5"
-                    initial={{ pathLength: 0, opacity: 0 }}
-                    animate={{ pathLength: 1, opacity: 1 }}
-                    transition={{ duration: 1.5, ease: "easeInOut" }}
+                    fill="url(#india-fill)"
+                    stroke="#64748b"
+                    strokeWidth="1"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                  />
+                  
+                  {/* Inner highlight stroke */}
+                  <path
+                    d={INDIA_PATH}
+                    fill="none"
+                    stroke="#94a3b8"
+                    strokeWidth="0.3"
+                    opacity={0.4}
+                    transform="translate(-0.3, -0.3)"
                   />
                   
                   {/* Kashmir region */}
                   <motion.path
                     d={KASHMIR_PATH}
-                    fill="hsl(var(--secondary))"
-                    stroke="hsl(var(--border))"
-                    strokeWidth="0.3"
+                    fill="#334155"
+                    stroke="#64748b"
+                    strokeWidth="0.5"
                     strokeDasharray="2 1"
-                    opacity={0.6}
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: 0.6 }}
-                    transition={{ delay: 0.5 }}
+                    animate={{ opacity: 0.7 }}
+                    transition={{ delay: 0.3 }}
                   />
                   
                   {/* Northeast region */}
                   <motion.path
                     d={NORTHEAST_PATH}
-                    fill="hsl(var(--secondary))"
-                    stroke="hsl(var(--border))"
-                    strokeWidth="0.5"
+                    fill="url(#india-fill)"
+                    stroke="#64748b"
+                    strokeWidth="0.8"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
+                    transition={{ delay: 0.2 }}
                   />
 
                   {/* City dots (background) */}
@@ -371,13 +419,16 @@ export function IndiaRouteMap({ source, destination, isLoading }: IndiaRouteMapP
                   </>
                 )}
 
-                {/* Empty state */}
+                {/* Empty state - shown ON TOP of map */}
                 {!hasRoute && !isLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm">
-                    <div className="text-center">
-                      <MapPin className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-                      <p className="text-sm text-muted-foreground">
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="text-center bg-background/70 backdrop-blur-sm rounded-xl px-6 py-4 border border-border/50 shadow-lg">
+                      <MapPin className="h-10 w-10 text-primary/50 mx-auto mb-2" />
+                      <p className="text-sm font-medium text-foreground">
                         Enter a route to visualize on India map
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Select source and destination cities above
                       </p>
                     </div>
                   </div>
