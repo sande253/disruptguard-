@@ -99,6 +99,7 @@ const mapOptions: google.maps.MapOptions = {
 export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaRouteMapProps) {
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null)
   const [routeLoading, setRouteLoading] = useState(false)
+  const [routeError, setRouteError] = useState<string | null>(null)
   const [map, setMap] = useState<google.maps.Map | null>(null)
 
   const { isLoaded, loadError } = useJsApiLoader({
@@ -119,10 +120,12 @@ export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaR
   useEffect(() => {
     if (!isLoaded || !source || !destination) {
       setDirections(null)
+      setRouteError(null)
       return
     }
 
     setRouteLoading(true)
+    setRouteError(null)
 
     const directionsService = new google.maps.DirectionsService()
 
@@ -136,13 +139,15 @@ export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaR
         setRouteLoading(false)
         if (status === google.maps.DirectionsStatus.OK && result) {
           setDirections(result)
+          setRouteError(null)
           // Fit bounds to show the entire route
           if (map && result.routes[0]?.bounds) {
             map.fitBounds(result.routes[0].bounds)
           }
         } else {
-          console.log("[v0] Directions request failed:", status)
+          console.error("Directions request failed:", status)
           setDirections(null)
+          setRouteError("Unable to find route. Try a more specific city name.")
         }
       }
     )
@@ -231,6 +236,19 @@ export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaR
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Route error message */}
+          {routeError && hasRoute && !showLoading && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-red-900/90 backdrop-blur-md px-4 py-2 rounded-lg text-center shadow-xl border border-red-700/50"
+              >
+                <p className="text-sm text-red-200">{routeError}</p>
+              </motion.div>
+            </div>
+          )}
 
           {/* Empty state overlay */}
           {!hasRoute && !showLoading && isLoaded && (
