@@ -14,7 +14,6 @@ import {
   Package,
   Warehouse,
   AlertTriangle,
-  TrendingUp,
   TrendingDown,
   Search,
   RefreshCw,
