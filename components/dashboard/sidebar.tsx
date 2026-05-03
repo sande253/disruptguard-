@@ -6,10 +6,8 @@ import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   LayoutDashboard,
-  Route,
   Factory,
   FlaskConical,
-  Bell,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -21,10 +19,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
-  { icon: Route, label: "Routes", href: "/routes" },
   { icon: Factory, label: "Suppliers", href: "/suppliers" },
   { icon: FlaskConical, label: "Simulation", href: "/simulation" },
-  { icon: Bell, label: "Alerts", href: "/alerts" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ]
 
