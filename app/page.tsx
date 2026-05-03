@@ -1,6 +1,8 @@
 "use client"
 
+import { useState } from "react"
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
+import { RouteInputPanel, RouteEmptyState } from "@/components/dashboard/route-input-panel"
 import { KPICards } from "@/components/dashboard/kpi-cards"
 import { RiskForecastChart } from "@/components/dashboard/risk-forecast-chart"
 import { RiskMap } from "@/components/dashboard/risk-map"
@@ -9,6 +11,21 @@ import { AIRecommendations } from "@/components/dashboard/ai-recommendations"
 import { SupplierTable } from "@/components/dashboard/supplier-table"
 
 export default function DashboardPage() {
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [hasAnalyzed, setHasAnalyzed] = useState(false)
+  const [currentRoute, setCurrentRoute] = useState<{ source: string; destination: string; mode: string } | null>(null)
+
+  const handleAnalyze = (source: string, destination: string, mode: string) => {
+    setIsAnalyzing(true)
+    setCurrentRoute({ source, destination, mode })
+    
+    // Simulate API call
+    setTimeout(() => {
+      setIsAnalyzing(false)
+      setHasAnalyzed(true)
+    }, 1500)
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -22,8 +39,23 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* KPI Cards */}
-        <KPICards />
+        {/* Route Input Panel */}
+        <RouteInputPanel onAnalyze={handleAnalyze} isLoading={isAnalyzing} />
+
+        {/* Show empty state or dashboard content */}
+        {!hasAnalyzed ? (
+          <RouteEmptyState />
+        ) : (
+          <>
+            {/* Route info banner */}
+            {currentRoute && (
+              <div className="text-sm text-muted-foreground">
+                Showing risks for: <span className="font-medium text-foreground">{currentRoute.source}</span> → <span className="font-medium text-foreground">{currentRoute.destination}</span> via <span className="capitalize text-foreground">{currentRoute.mode}</span>
+              </div>
+            )}
+
+            {/* KPI Cards */}
+            <KPICards />
 
         {/* Main content grid */}
         <div className="grid gap-6 lg:grid-cols-3">
@@ -41,7 +73,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Supplier Table */}
-        <SupplierTable />
+            <SupplierTable />
+          </>
+        )}
       </div>
     </DashboardLayout>
   )
