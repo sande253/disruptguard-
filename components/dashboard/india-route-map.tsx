@@ -6,43 +6,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Spinner } from "@/components/ui/spinner"
 import { MapPin } from "lucide-react"
 
-// India map boundaries (approximate lat/lng)
-const INDIA_BOUNDS = {
-  minLat: 8.0,
-  maxLat: 37.0,
-  minLng: 68.0,
-  maxLng: 97.5,
-}
-
-// City coordinates (lat, lng) - accurate positions
-const cityCoordinates: Record<string, { lat: number; lng: number }> = {
-  "Mumbai": { lat: 19.076, lng: 72.877 },
-  "Delhi": { lat: 28.613, lng: 77.209 },
-  "Bangalore": { lat: 12.972, lng: 77.594 },
-  "Chennai": { lat: 13.083, lng: 80.270 },
-  "Hyderabad": { lat: 17.385, lng: 78.486 },
-  "Kolkata": { lat: 22.572, lng: 88.363 },
-  "Pune": { lat: 18.520, lng: 73.856 },
-  "Ahmedabad": { lat: 23.022, lng: 72.571 },
-  "Jaipur": { lat: 26.912, lng: 75.787 },
-  "Kochi": { lat: 9.931, lng: 76.267 },
-  "Vizag": { lat: 17.686, lng: 83.218 },
-  "Nagpur": { lat: 21.145, lng: 79.088 },
-  "Lucknow": { lat: 26.846, lng: 80.946 },
-  "Surat": { lat: 21.170, lng: 72.831 },
-  "Coimbatore": { lat: 11.016, lng: 76.955 },
-  "Panaji": { lat: 15.491, lng: 73.827 },
-  "Bhopal": { lat: 23.259, lng: 77.412 },
-  "Indore": { lat: 22.719, lng: 75.857 },
-  "Chandigarh": { lat: 30.733, lng: 76.779 },
-  "Guwahati": { lat: 26.144, lng: 91.736 },
-}
-
-// Convert lat/lng to SVG coordinates
-function latLngToSvg(lat: number, lng: number): { x: number; y: number } {
-  const x = ((lng - INDIA_BOUNDS.minLng) / (INDIA_BOUNDS.maxLng - INDIA_BOUNDS.minLng)) * 100
-  const y = ((INDIA_BOUNDS.maxLat - lat) / (INDIA_BOUNDS.maxLat - INDIA_BOUNDS.minLat)) * 100
-  return { x, y }
+// SVG viewBox is 0-1000 for both axes
+// Map coordinates based on the simplemaps India SVG
+const cityCoordinates: Record<string, { x: number; y: number }> = {
+  "Mumbai": { x: 248, y: 592 },
+  "Delhi": { x: 350, y: 325 },
+  "Bangalore": { x: 360, y: 760 },
+  "Chennai": { x: 430, y: 755 },
+  "Hyderabad": { x: 378, y: 660 },
+  "Kolkata": { x: 565, y: 505 },
+  "Pune": { x: 278, y: 625 },
+  "Ahmedabad": { x: 235, y: 490 },
+  "Jaipur": { x: 305, y: 400 },
+  "Kochi": { x: 310, y: 855 },
+  "Vizag": { x: 460, y: 640 },
+  "Nagpur": { x: 378, y: 530 },
+  "Lucknow": { x: 430, y: 395 },
+  "Surat": { x: 238, y: 535 },
+  "Coimbatore": { x: 340, y: 820 },
+  "Panaji": { x: 262, y: 710 },
+  "Bhopal": { x: 345, y: 480 },
+  "Indore": { x: 305, y: 490 },
+  "Chandigarh": { x: 338, y: 262 },
+  "Guwahati": { x: 680, y: 405 },
 }
 
 interface RouteSegment {
@@ -59,47 +45,6 @@ interface IndiaRouteMapProps {
   destination: string | null
   isLoading?: boolean
 }
-
-// Recognizable India outline - simplified but accurate shape
-const INDIA_PATH = `
-  M 25 8 
-  C 28 5, 35 4, 42 6
-  L 48 8 L 52 7 L 55 8
-  C 60 10, 65 12, 70 18
-  L 75 22 L 78 28
-  C 80 32, 82 38, 82 42
-  L 83 48 L 82 52
-  C 80 58, 76 62, 72 66
-  L 68 70 L 62 74
-  C 56 78, 50 82, 45 86
-  L 40 90 L 35 92
-  C 30 94, 25 95, 22 93
-  L 20 88 L 22 82
-  C 24 76, 22 70, 18 65
-  L 14 58 L 12 50
-  C 10 42, 12 34, 15 26
-  L 18 20 L 22 14
-  C 23 11, 24 9, 25 8
-  Z
-`
-
-// Kashmir region (northern area with dashed border)
-const KASHMIR_PATH = `
-  M 25 8
-  C 22 4, 30 2, 38 3
-  L 45 4 L 48 6 L 48 8 L 42 6
-  C 35 4, 28 5, 25 8
-`
-
-// Northeast region (Seven Sisters)
-const NORTHEAST_PATH = `
-  M 82 42
-  L 88 38 L 92 40 L 95 44
-  L 96 50 L 94 54
-  L 90 56 L 86 54 L 84 50
-  L 83 48 L 82 42
-  Z
-`
 
 export function IndiaRouteMap({ source, destination, isLoading }: IndiaRouteMapProps) {
   const [hoveredSegment, setHoveredSegment] = useState<RouteSegment | null>(null)
@@ -129,8 +74,8 @@ export function IndiaRouteMap({ source, destination, isLoading }: IndiaRouteMapP
     }
   }, [source, destination])
 
-  const sourceCoords = source && cityCoordinates[source] ? latLngToSvg(cityCoordinates[source].lat, cityCoordinates[source].lng) : null
-  const destCoords = destination && cityCoordinates[destination] ? latLngToSvg(cityCoordinates[destination].lat, cityCoordinates[destination].lng) : null
+  const sourceCoords = source && cityCoordinates[source] ? cityCoordinates[source] : null
+  const destCoords = destination && cityCoordinates[destination] ? cityCoordinates[destination] : null
 
   const getRiskColor = (risk: "low" | "medium" | "high") => {
     switch (risk) {
@@ -170,7 +115,7 @@ export function IndiaRouteMap({ source, destination, isLoading }: IndiaRouteMapP
       </CardHeader>
       <CardContent className="pt-0">
         <div 
-          className="relative h-[420px] w-full rounded-xl bg-secondary/30 overflow-hidden"
+          className="relative h-[480px] w-full rounded-xl bg-secondary/30 overflow-hidden"
           onMouseMove={(e) => {
             const rect = e.currentTarget.getBoundingClientRect()
             setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
@@ -178,7 +123,7 @@ export function IndiaRouteMap({ source, destination, isLoading }: IndiaRouteMapP
         >
           {/* Subtle grid background */}
           <div 
-            className="absolute inset-0 opacity-20"
+            className="absolute inset-0 opacity-10"
             style={{
               backgroundImage: `
                 linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px),
@@ -211,88 +156,76 @@ export function IndiaRouteMap({ source, destination, isLoading }: IndiaRouteMapP
                 className="absolute inset-0 flex items-center justify-center p-4"
               >
                 <svg
-                  viewBox="0 0 100 100"
-                  className="w-[70%] h-[85%] max-w-[320px]"
+                  viewBox="0 0 1000 1000"
+                  className="w-full h-full max-h-[440px]"
                   preserveAspectRatio="xMidYMid meet"
-                  style={{ filter: "drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))" }}
+                  style={{ filter: "drop-shadow(0 4px 16px rgba(0, 0, 0, 0.4))" }}
                 >
-                  {/* Glow effect behind India */}
                   <defs>
-                    <filter id="india-glow" x="-50%" y="-50%" width="200%" height="200%">
-                      <feGaussianBlur stdDeviation="2" result="blur" />
-                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                    </filter>
-                    <linearGradient id="india-fill" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#334155" />
+                    {/* Gradient for India fill */}
+                    <linearGradient id="india-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#475569" />
+                      <stop offset="50%" stopColor="#334155" />
                       <stop offset="100%" stopColor="#1e293b" />
                     </linearGradient>
+                    {/* Glow filter */}
+                    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="8" result="blur" />
+                      <feFlood floodColor="#3b82f6" floodOpacity="0.3" />
+                      <feComposite in2="blur" operator="in" />
+                      <feMerge>
+                        <feMergeNode />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
                   </defs>
 
-                  {/* Shadow/glow layer */}
-                  <path
-                    d={INDIA_PATH}
-                    fill="#3b82f6"
-                    opacity={0.15}
-                    filter="url(#india-glow)"
-                    transform="translate(0.5, 0.5)"
-                  />
+                  {/* India map from simplemaps - main features */}
+                  <g id="india-map">
+                    {/* Andaman & Nicobar Islands */}
+                    <path d="M802.5 941.1l-0.2 0.4 0.3 0.4 0.5-0.1 0.4 0.8-0.1 0.3 0.2 0.7 0.1 0.8-0.1 1 0.4 0.2 0.4 0.8 0.1 1.1-0.2 0.3 0.4 0.4 0.2 0.6-0.5 0.5-0.2 0.6 0.2 0.3-0.6 0.3 0.2 0.5-0.3 0.4 0 0.6 0.5 0.2-0.4 1-0.3 0.2-0.4-0.5-0.5 0-0.2 0.4 0.1 0.5-0.5 0.7-0.6-0.2 0.2-1.2-0.4-0.2-0.4-0.6 0.2-0.4-0.5-0.4 0.1-0.5-0.4-0.7-0.4 0-0.2-0.5 0.3-0.3-0.2-0.7-0.4-0.2-0.2-0.6-0.4 0.1-0.3-0.6-0.3-0.2-0.5 0.1-0.1-0.8 0.1-1.1-0.2-0.1-0.2-1.1 0.6-0.4 0-1 0.3-0.4 0.7 0 0.6 0.1 0.6-0.7 1.4-0.1 0-0.3 0.5-0.3 0.6-0.1z m-3.7-5.6l0.3 0.6 0 0.7 0.9 0.6-0.1 0.5-0.3 0.3-0.5 1-0.5 0.2-0.7 0.5-0.3 0.7-0.6 0.5-0.5-0.7 0.1-0.6-0.2-0.5 0.3-0.4-0.1-1.1 0.8-0.5 1.3-0.4-0.1-1.2 0.2-0.2z" 
+                      fill="url(#india-gradient)" stroke="#64748b" strokeWidth="1" />
+                    
+                    {/* Main India landmass */}
+                    <path d="M355.2 698.3l0.1-1.2-0.2-0.3 0.1-0.8-0.2-0.1-0.3-0.7 0.3-1.2-0.1-0.7-0.3-0.6-0.1-1.2 0.3-0.8 0-0.7-0.2-1.1 0.4-0.5 0.6 0 0.5-0.5 0.6-0.3 0.4 0.3 0.3-0.8-0.2-0.4-1.3-0.7-0.5-0.5-1-0.2-1.2 0.1-0.7 0.3-1-0.5-0.6 0.1-0.6-0.3-1.3-0.5-0.5-0.7-0.4-1.1 1.1-0.2 0.2-0.5 0.7 0.3 1.2-0.1 0-0.5 0.4-0.2 0.9-0.2 0-0.8-0.4-0.1-0.2-0.5 0.8 0 0.4-0.4 0.5 0 0-0.8 0.4-1-0.2-0.2-0.8 0.3-0.5-0.7 1.4-0.4 0.1-0.9-1.3-0.1 0.4-1.4 0-0.5 0.8 0.1 0.2-0.6-0.5-0.8 0.1-0.6-0.1-1.8 0.3-0.2-0.1-1.1 0.5-0.4-0.1-0.6 0.6-0.5-0.2-0.8-0.4-0.8 0-0.4-0.5-0.5 0.1-0.3-1.6-0.5-0.8-0.5-0.4-0.6 0.3-0.9 0.6 0 0-0.6-0.3-0.2 2-1.6-0.6-0.4 0.4-0.7 0.2-0.9-0.1-0.7 0.7 0 0.2 0.4 1-0.2 0-0.7 0.3-0.3-0.6-0.4 0-0.5 0.6-0.4 1.1 0.4 0-0.7 0.7 0.3 0.4 0 0-0.8 0.6-0.1 0.4-0.2 1 0.2 0.1-0.7-0.9-0.7-1 0-0.8-0.3-0.1-0.7-1 0.2-0.6-0.7-0.7 1-0.3-0.8-0.5 0.1-0.3-0.4-0.6-0.1 0-0.6 0.3-0.8-0.2-0.8 0.4-1.2 0.8-0.2 0.2-0.3 0.9-0.3 0.3 0.1 0.6-0.6-0.2-0.5-0.8-0.5-0.6-0.1 0.2-0.5 0.4-0.3 0-0.4 0.8-0.1 0.3-0.4 0.1-0.7 0.7-0.4-0.2-0.8 0.8 0.2 0.1-1.2 0.7-0.1 0.2-0.6-0.2-0.7-0.4 0-0.7-0.7-1.4-0.5-0.2-0.6 0.6-0.6 0.8-0.2 0.1-0.5-0.2-0.8 0.1-0.7-0.5-0.3-0.3-0.8 0.5-0.8-0.4-0.7 0.8-1-0.8-0.4-0.6 0 0.5-0.5-0.4-0.7-0.7-0.2-0.2-0.7 0.8-0.7 0.1-0.9-0.8-0.2 0.1-0.4 0.9 0.1 0.6-0.2-0.3-0.7 0.1-0.5 0.7 0.3 0-0.5-0.4-0.3 0.3-1.3 1.2-0.2 0.1 0.5 0.3 0.3 1.5-0.8 0.5 0.1 0.5-1.1-0.1-0.9-0.4-0.7 0.1-0.9 0.5-0.4 1-0.1 0.4-0.7 0-0.4 0.6-1.1 0.4-1.1 1.9-0.7 0.9 0.3 0.1-0.6-0.5-0.5-0.7-0.3-0.4-0.5-0.1-0.6-0.7 0-0.5-0.1 0.4-1.2-1.1 0.1 0.1-1-1.4 0 0-1.1-0.2-0.2 0.1-1 1 0.3-0.1-0.6 0.1-0.8 0.5-0.1 0.3 0.5 0.4 0 0.1-0.8-0.3-0.5 0.4-0.7 0.1-0.6-0.2-0.3 0.6-1.7 0.5-0.4 0.4 0.1 0-0.6-1.1-0.2 0-0.5 1.4-0.5 0.4-0.4 0.6-0.3 0.8 0.6 0.2 0.4 0.7 0.2 0.5 0.6 0.5 0.3 0 0.6 0.3 0.3 0.7-0.5 0.4 0.3 0.8 0 0.6 0.4 0.9-0.3 0-1.1 0.3-0.7 0.1-0.8-0.5-0.6 0.3-1.3 1-1.1 0.7 0.1 0.6-0.7 0.7 0.2 0.4-0.5-0.1-0.6-0.3-0.5-0.1-1.6 0.4-0.4 0-0.9-0.6-1.5-0.5-0.2 0.4-0.8 0.9 0 0.1-0.4 0.7-0.3 0-0.6 0.4-0.6 0.2-0.8-0.2-0.7-0.6-0.2 0-0.8-1.2-0.3 0.4-1.8 0.7 0.9 1.3 0.1 0.1 0.8 0.5 0.3 0.5-0.2 0.3-0.4 0.9 0.6 0.6-0.1 0.6-0.8 0.2-0.4-0.4-0.5 0.1-0.8-0.4-0.3 0.3-0.5 0.7-0.4 0.7 0.4 1.7 0 0.3-0.5 0.6-0.4 1.1-0.5 0.3 0.4 0.6-0.3 0.4-0.9 0.9 0.3 0.6-0.4 0.9 0.6 0.6-0.2 0.7 0.8 0.4 0 0.7-0.9 0.6 0.5 0.9-0.3 0.1-0.7-0.5-0.7 0-0.5 0.7-0.5 0.7 0 0.9-0.7 0.1-0.6 0.7-0.3 1.1-0.7 0.2 0.1 1 0.9 0.1 0.9-0.1 0.7 0.3 0.5-0.6-0.1-0.7 0.3-0.4 0.8-0.1 0.7-0.7 0.4-0.4 0.8-0.7 0.1 0.2 0.4-0.7 0.7-0.7 0.1 0.2 0.8 0.8 0.3 0.7-0.5-0.1-0.7 0.7-0.9 0.2-0.7-0.5-0.1-0.5 0.3-0.9-0.6-0.1-0.5-0.5-0.5 0.2-0.3 0.8-0.2 0-0.5-0.6-0.3-0.2-0.6 0.3-0.7-0.4-0.4 0.4-0.5 0.1-0.6-0.5-0.2-0.5-1 0.2-0.9 0.7 0-0.1-0.9 0.6-0.3 0.2-0.6 0.7-0.3 0.2-0.6-0.3-0.6 0.5-0.5 1.2-0.1-0.1-0.4 0.2-0.9 0.6-0.2 0.8-0.8 0.4-0.8 0.3-0.5 0.5-0.2 0.5 0.3 0.3 0.6 0.8 0.5 0.4 0.4 0.3 0.8 0.8 0.4 0.5 0.6 0.5 0.3 0.2 0.6 0.5 0.3 0.7-0.2 0.7-0.5 0.4 0.3 0.2 0.7 0.7-0.2 0.7 0.3 0.9 0.7 0.7-0.2 0.4 0.2 0.7 0.6 0.6-0.3 1.8 0.3 0.7 0.3 0.3-0.4 0.4 0.5-0.1 0.7 0.3 1.1-0.5 0.5-0.6-0.2-0.9-0.3-0.5 0.3-1.1 0.5 0.8 0.3 0.2 0.7-0.4 0.9-0.6 0.3-0.4-0.9-0.8 0.5 0 0.5-0.9-0.2-0.8-0.5-0.4 0.2-0.3 0.6-0.2 0.6-0.8 0.4-0.4-0.2-0.8-0.5-0.2-0.6 0.3-0.3 0-0.3-0.8-0.5-0.1 0.2-0.3 0.5 0.3 0.3-0.3 0.2-0.8-0.2-0.7 0.2-0.4 0.4-0.1 0.4 0.6 1.2 0.2 0.1 0.7 0.3 0.4 0.6-0.1 0.5 0.3 0.5-0.3 0.7 0.5-0.2 0.9 0.1 0.6-0.8 0.4-0.4 0.6 0.3 0.3 0.7 0.5 0.2 0.6-0.6 0.1-0.5 0.5 0.1 0.2 0.4 0.5 0 0.7-0.6 0.5-0.2 0.7 0.1 0.2 0.3 0.6 0.1 0.7-0.5 0.8-0.6 0.6-0.4 0.1-0.4 0.6-0.1 0.6 0.5 0.3 0.8 0.7-0.6 0.6 0 0.4 0.7-0.4 0.4-0.6 0.6-1.3 0.6 0 1 0.3-0.9 0.7-0.5 0.9-0.1 0.8-1.8 0.8-0.9 0.7 0.6 1.1 1.8 0.8 0.6 0.6 0.7-0.6 0.4 0.4-0.4 0.7-0.6 1.3 0.3 1 0 0.7 0.5 1.9 0.4 0.5 0.2 0.4 0.7 0.5 0.1 0.7 0.4 0.8 0.5 0.4 0.6 1.2 0.5 0.6 1 0.6 0.7 0 0.3-1.4 0.7 0.1 1.3-0.1 0.7-0.3 0.9-1 0.1 0.6 0.8 1 0.3 0.2-0.3 0.5-0.2 0.6-1 0.1-0.1 0.9-0.6 0.3-0.5-0.4-0.8 0-0.4-0.1-0.9 0.3-1.4 0.7 0.4-0.1 0.8-0.4 0.5-0.4 0-0.4-0.4-0.3 0.3-0.9 0.6 0.1 0.6-0.3 0.2-0.7 0.2-1 0.8 0.2 0.5 0.4 0 1.2-0.4 0.3 0.1 0.5 0.3 1.5 0.5 0.5 0.3 0.6-0.7 0.5 0 0.6-0.4-0.5-2.1-0.1-0.5 0.2-0.3 0.4-0.2 0.4 0.2 0.2 0.4 0.6 0.2 0.4 0.6 0.1 0.5-0.4 0.6-0.2 0.8 0.3 0.4 0.7-0.1 0.4 0.1 0.4-0.2 0.5 0.4 0.3 0.4-0.3 0.9-0.7 0.2-0.1 0.6-0.3 1.8-0.3 0.7 0 0.5 0.2 1.3-0.4 0.3 0.3 0.8 0.2-0.1 0.8-0.4 0.4-0.4 0.1-0.1 0.5-0.6 0.7-0.1 0.6-0.3 0.7-0.4 0.4-0.2 0.5 0.2 0.5 0.4-0.1 0.3 0.5 0.4 0.1 0.3 0.5 0.1 0.7 0.3 0.5-0.3 0.4-0.2 0.9-0.5 0.6-0.4 0.6-0.7 0.5 0 0.7-0.6 0.2-0.2 0.5-0.6 0.5 0.1 0.6-0.4 0.6-0.7-0.1-0.3 0.5-0.9 0.2-1.2 0.7-0.2-0.1-0.5 0.3-0.5 0.5 0.1 1.2 0.9 0.3 0.1 0.6-0.3 0.5-0.4 0.7 0.3-0.3 0.7 0.4 0.3 0.3-0.4 0.5 0.3 0.5 0.8 0.3 0.5-0.3 0.7 0.2 1 0.5 0.1 0.7 0.5 0.2 0.4-0.2 0.3 0.3 0.7 0.7-0.3 0.3 0.2 0.4-0.2 0.9-0.1 0.2 0.3 0.4-0.7 0.4 0.1 0.3-0.5 0.5 0.1 0.3 0.5 0.6 0.1 0.3-0.4 0.3 0.4 0.4-0.6 0.8 0.1 0.3-0.5 0.5 0.2 0.7-0.6 0.5-0.2 1.2 0.5 0.2-0.2 0.5 0.2 0.7-0.4 0.5 0.1 0.3-0.3 0.3 0 0.6-0.6 0.4-0.3 0.7-0.3 0.2 0.2 0.4-0.2 0.5 0.2 0.7-0.1 0.4-0.5 0.5 0.2 0.7 0.5 0.5 0.1 0.2 0.4 0.2 0.1 0.6-0.4 0.5 0.2 0.4 0.5 0.2 0.2-0.1 0.6 0.4 0.5 0.5 0.3 0.1 0.4-0.2 0.6 0.3 0.6 0.2 0.2 0.9 0.2-0.1 0.6 0.4 0.3-0.2 0.7 0.1 0.4-0.4 0.5-0.2 0.5 0.3 0.4-0.1 0.5 0.3 0.3 0.4 0 0.2 0.3-0.3 0.7 0.3 0.4-0.1 0.4 0.3 0.4 0.7 0.3 0.1 0.5-0.7 0.3-0.1 0.6-0.5 0.4 0.2 0.4-0.2 0.5-0.8 0.5-0.2 0.5 0.1 0.3 0.4 0.2 0.3 0.5 0.1 0.5-0.3 0.7-0.9 0.3 0.1 0.7-0.6 0.4 0.2 0.4-0.2 0.3 0.1 0.6 0.4 0.4 0.6 0.1-0.1 0.5-0.5 0.3-0.1 0.6 0.2 0.7-0.3 0.5 0.2 0.3-0.2 0.3 0.2 0.3 0.8-0.3 0.3 0.1 0.6 0.5 0.2-0.4 0.6 0.4 0.6-0.1 0.4 0.1 0.3-0.2 0.6 0.5 0.5 0.3 0 0.4 0.4 0.7-0.5 0.6-0.3 0.6 0.6 0.4 0.2 0.4 0.6 0.3-0.5 0.6-0.4 0.3 0.1 0.5-0.4 0.3-0.2 0.9 0.3 0.4-0.2 0.5-0.5 0.3 0.1 0.5-0.2 0.5-0.5 0.3 0.2 0.5-0.6 0.3-0.2 0.5 0.1 0.3 0.4 0.4-0.1 0.7-0.4 0.3 0.1 0.6-0.2 0.5 0.3 0.3-0.3 0.4-0.1 0.5 0.4 0.4-0.2 0.8 0.3 0.2-0.2 0.5-0.5 0.5-0.4 0.4 0.1 0.5 0.4 0.3-0.1 0.5-0.4 0.3 0.2 0.6-0.1 0.4-0.3 0.4 0.1 0.5-0.2 0.5-0.3 0.2-0.7 0.2-0.6 0.4-0.5 0.7-0.3 0.4-0.9 0-0.8 0.7-0.8 0-0.9 0.5-0.4 0-0.4 0.6-0.9 0.3-0.4 0.3-1.3 0-0.2 0.3-0.6 0.1-0.1 0.5 0.1 0.7-0.3 0.6-0.6 0.2-0.5 0.5-0.6 0.2-0.5-0.4-0.6-0.5-0.7-0.3-0.2 0.3-0.5 0-0.6 0.4-0.4 0.4-0.6-0.2-0.5 0.2-0.4-0.3-0.7 0.1-0.6-0.3-0.4 0.1-0.5-0.5-0.7-0.4-0.3 0.2-0.4-0.2-0.4-0.8-0.5-0.5 0-0.5-0.6-0.4 0-0.5-0.6-0.3-0.6-0.8-0.4 0-0.8 0.2-0.4-0.4-0.6-0.1-0.7-0.5-0.3-0.4 0.2-0.7 0-0.7-0.4-0.4-0.3-0.6-0.5-0.4-0.6-0.1-0.7-0.3-0.4-0.5-0.5 0.1-0.4-0.4-0.4-0.5 0.1-0.5-0.3-0.3-0.5 0.1-0.5-0.2-0.3-0.5-0.5-0.4 0.1-0.3-0.3-0.5-0.7-0.3-0.2-0.5 0.3-0.3-0.2-0.6 0.1-0.3-0.4-0.5-0.5-0.2-0.7 0.3-0.4-0.4-0.5-0.4 0.1-0.5-0.3-0.3-0.5-0.1-0.5-0.4-0.2-0.6 0.2-0.4-0.3-0.6-0.4-0.4-0.7 0.1-0.5-0.5-0.3-0.5 0.2-0.6-0.3-0.3-0.5-0.2-0.4-0.5-0.6 0-0.5-0.5-0.3-0.2-0.4 0-0.5-0.4-0.3-0.6-0.5-0.2-0.5-0.5-0.3-0.2-0.4-0.6-0.4-0.2-0.7-0.4-0.2-0.6 0.1-0.5-0.5-0.5-0.3-0.6-0.5-0.2-0.6-0.3-0.4-0.6-0.2-0.6-0.4-0.4-0.3-0.6-0.3-0.4 0-0.5-0.5-0.2-0.6-0.5-0.4-0.2-0.6-0.6-0.3-0.3-0.6-0.5-0.2-0.6-0.4-0.4-0.3-0.6-0.5-0.3-0.4-0.4-0.5-0.4-0.6 0-0.5-0.3-0.5-0.6-0.2-0.5-0.5-0.5-0.3-0.4-0.4-0.6-0.3-0.5-0.5-0.4-0.4-0.5-0.3-0.4-0.5-0.4-0.5-0.5-0.3-0.5-0.4z" 
+                      fill="url(#india-gradient)" stroke="#64748b" strokeWidth="1.5" />
 
-                  {/* India outline - main body */}
-                  <motion.path
-                    d={INDIA_PATH}
-                    fill="url(#india-fill)"
-                    stroke="#64748b"
-                    strokeWidth="1"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                  />
-                  
-                  {/* Inner highlight stroke */}
-                  <path
-                    d={INDIA_PATH}
-                    fill="none"
-                    stroke="#94a3b8"
-                    strokeWidth="0.3"
-                    opacity={0.4}
-                    transform="translate(-0.3, -0.3)"
-                  />
-                  
-                  {/* Kashmir region */}
-                  <motion.path
-                    d={KASHMIR_PATH}
-                    fill="#334155"
-                    stroke="#64748b"
-                    strokeWidth="0.5"
-                    strokeDasharray="2 1"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 0.7 }}
-                    transition={{ delay: 0.3 }}
-                  />
-                  
-                  {/* Northeast region */}
-                  <motion.path
-                    d={NORTHEAST_PATH}
-                    fill="url(#india-fill)"
-                    stroke="#64748b"
-                    strokeWidth="0.8"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                  />
+                    {/* Gujarat, Rajasthan, Maharashtra region */}
+                    <path d="M427.5 763.5l0.5 0.8-0.5 1.1-0.6-0.8 0.1-0.6 0.5-0.5z m57.7-87.2l0.7-0.2 0.9-0.2 0.4-0.5 0.3 0.5-0.1 0.6-0.5 0.9 0 1-0.6 0.2-0.4-0.9-0.8-0.3 0.3-0.5-0.2-0.6z m-130 22l2.1 0.4 0.5-0.1 0.9 0.8 1.3 0.2 0.8-0.3 2.3 0.6 1-0.3 0.6 0 0.3-0.5 0.5-0.1 1.2 0.6 1.2 0 0.8 0.4 0.4-1 0.6-0.1 0.3 0.8 0.4 0.8 1 0.4 0.7-0.2 0-0.4 1 0 0.5-1.1-0.1-0.3 0.7-0.5 0.7-0.2 0.4-0.4 0.1-0.9 0.3-0.7-0.2-0.9 0.5-0.3 0.6 0.2 0.7 0 0.6-0.7 0.8-0.2 1-0.6 1.3 0 1.2 0.3 1.7 0.4 1.2-1.1 0.9 0.1 0.9 1 0.5 0.5 0.8 0.4 0.6 0.1 1 0 0.9-0.7 0.8-1.1-0.1-1.9 0.7-0.2 0.2 0.4 0.2 1 0.8 0.4 0.6-0.7-0.5-1.3 0.1-0.7 1.4-0.8 0.9-0.3 0.7-0.4 0.7 0 0.7 0.2 1.5 0 1.4 0.6 0.9-0.4 0.5-0.6 0.1-1.4-0.1-1.1-0.4-0.7 0.2-2.2 0.5-0.5-0.4-1 0.2-0.8 0.8-0.7 0.2-0.5 1.4-0.4 0.8-0.1 2.2-0.1 0.4-0.3 0.2-0.4 1.3-0.6 1.1-0.1 1-0.3 0.7-0.6 1.3 0.1 0.2-0.4 0.8-0.5 1.1 0 0.7-0.8 0.7-0.3 0.2 0.2 0.8 0.9 1.4-0.2 0.3 0.3 0.5 1.1 0.3 0.3 0.6 0.2 0.5 0 0.8-0.8 0.5-0.9 0.7-0.6 0.9-0.9 0.1-0.8 0.5-1.2-0.8-0.3-0.2-0.8-0.6 0-0.6-0.3 0.5-1.3 0.8-0.8 0.2-0.8 1.1 0 0.1-0.7 0.5 0.2 0.7-0.1 0.3-0.5 0.6-0.6 0.5-0.6 0.3 0.1 0 0.7 0.6-0.1 0.7 0.5 0.5-0.2 1.1 1.5 0.3 1.3 0.2 1.2 0.4 0.4 0.7 0 0.4 1.3 0.7-0.6 0-0.5 0.5 0.2 0.1 0.4 0.9 0.4 0.1 0.7 0.9 0.4 2 0.4 0.9-0.7-0.3-0.6-0.8-0.5 0.2-0.3 0-1 0.6-0.1-0.1-0.8 0.1-0.7-0.4 0-1.1-0.7-0.3 0.4-0.8-0.3-0.4 0.7-0.9-0.6-1.2-0.4-1.1-0.4 0.3-0.7 0.5-0.5-0.6-1.2 0.8-0.6 0.1 0.6 0.6 0.9 0.7 0.2 0.2-0.6 0.5 0 0.3-0.5 0.1-0.8 0.3-0.5 1.4-0.7 0.3-0.4 1 0.6 0.9 0.2 0.7 0.8-0.5 0.3 0.3 0.5 1-0.4 1.1 0.1 0.6 0.3 2.1 0.5 0.3 0.3 0.7-0.7-0.1-0.5 0.2-0.8-0.2-0.4 0.3-0.4 0.1-0.6 0.5 0.1 0.7-0.1 0-0.7-0.2-0.9 0.7-0.1 0.6 0.5 0.8 0.2 1.2-0.2 0.4-0.5 0.6 0 0.6-0.2 1.6-0.6 0.5 0 0.5-0.6-0.3-0.4 0.1-1.1 0.5-0.6 0.7 0.2 1.4 0 0.6-0.5 0.9-1.5 0.5 0.1 0.2 0.5 1 0.4 0.8-0.2 0.2-0.3 0.5-0.3 1.5-1.9 0.2-2.6 0.6-0.9-0.6-0.5 0.3-0.6 0.6-0.6 0.5-1 0.5-0.6 0-0.9 0.3-0.4 0.7-0.3 0.4-0.6 1.4-0.1 0.7-0.5 0.1-0.5 0.7-0.5 0.7 0 0.3-0.3 0.5-0.1 0.3-0.3-0.4-0.8-0.6-0.7 0.8-0.5 0.4-0.7 0.9-0.4 0.3 0 1.5-0.5 0.4-0.3 0.6-0.2 1.8-1.1 0z" 
+                      fill="url(#india-gradient)" stroke="#64748b" strokeWidth="1" />
+
+                    {/* Northeast states */}
+                    <path d="M840.5 381.3l0-0.8-0.5-0.7 0-0.6 0.7-0.9-0.8-0.4-0.4-1.3-0.4-0.7 0.8-0.7 0.4 0 0.1-1.1-0.4-0.4-0.3-0.8 0.2-0.3-0.5-0.6 0.1-0.5-0.1-1.1 0.5 0.3 0.7-0.3 0.2 0.4 0.8-0.6 0-0.2 0.9-0.8 1.6-1 1.1-0.1 0.3-0.4 1.1-0.2 0.2-0.6 0.1-1.1-0.3-0.5 0.8-1.2 1.3-0.7 1.1 0.6 0.4 0.6 1.3-0.2 1.3-0.6 1.1-0.1 0.2-0.2 1.4-0.4 0.7 0 1.4-0.4 0.3 0.8 0.7 0.1 0.3-0.9 1.5-0.8 0.2-0.6 0.6-0.4 0.6-0.7-0.4-0.9-0.7-1-1.1-0.3-0.6 0.2-0.3 0.8-0.5-1-0.5 0.5-0.4 0 0.3-1 0.4-0.3 0.1-0.9 0.1-1.6-0.6 0-1.1-0.9 0.1-0.7-0.7-0.1-0.3-0.8 0.4-0.5-0.6-0.4 0-0.5 0.4-0.4-0.6-0.3-0.1-0.6-0.3-0.3 0.8-0.4-0.2-0.5 0.6-0.5 0.6-1.1 0.8-0.7 0.6-0.3 1.3-1.3 0.9-1.3-0.1-0.5 0.7-0.8z" 
+                      fill="url(#india-gradient)" stroke="#64748b" strokeWidth="1" />
+
+                    {/* Northern states including Kashmir */}
+                    <path d="M693.6 416.4l0.1 0.2 0 0.5 0.2 0.7-0.3 0.4-0.4 0 0.2-1.2 0.2-0.6z m61.3-41.4l0.3 0.1 2 0 1.7-0.7 0.6 0.3 0.7-0.2 0-0.5 1.4-0.3 1.3 0.3 0.3-0.6 0.4 0 0.5-0.5 1.6-0.2 1.4 0.3 0.8-0.1 1.7-0.8 0-0.7 0.3-0.9 1.5 0.4 1.6-0.2 1.8 0.6 1 0.2 1.2 0.7 0 0.6 2.2 1 0.6 0.5 1.4-0.3 0.6 0.3 0.5-0.4 2-0.3 1.1-0.3 1.2-0.2 2.2-0.3 2.7 0.3 0.6 0.5 0.6 0 1-0.3 1.6-0.1 1.1-0.4 1.4-0.2 1.2-1.5 1.3-0.7 1.2-0.8 0.7-0.3-0.3-0.6 0-0.7-0.6-0.4 0.1-0.5 0.5-0.6 0.4-0.1 0.7-0.8 1-1.3 1-1 0.5-0.7 1.2-1.2 1.6-0.9 0.7-1.2 2-2 0-0.3 1-0.6 1.8-0.8-0.1-1.1-0.8-0.5-0.1-0.8-0.3-0.1 0.6-0.9 0.8-0.1-0.3 0.7 0.9 0.7 0.7 0 1.5 0.4 0.6-0.3 0.4 0 0.5-0.4 0.9 0.9 1.3-0.2 0.7-0.5 1.3-0.4 0.5-0.5 1.3-0.2 0.2-0.4 1.4-0.8 0.6 0 0.6 0.2 1.4-1.1 0.7 0 0.8-0.4 0.3-0.9z" 
+                      fill="url(#india-gradient)" stroke="#64748b" strokeWidth="1" />
+
+                    {/* Chandigarh */}
+                    <path d="M336.5 254l-0.1 1 0.4 0.6-0.5 0.5 0 0.4-0.3 0-0.1 0.2-0.3 0.3-1.3-0.7-0.2 0.1-0.2-0.3-0.2-0.2 0.1-0.1-0.4-0.2 0-0.1-0.1-0.6-0.5-0.7 0-0.1 0.7-0.3 0.3-0.2 0.2-0.2 0.1-0.2 0-0.1 0.2-0.1 0.1-0.1 0.5 0.1 0.2 0.3-0.1 0.1 0.2 0.3 0.5-0.4 0.1 0.1 0.1 0.1-0.3 0.4 0.9 0.1z" 
+                      fill="url(#india-gradient)" stroke="#64748b" strokeWidth="1" />
+
+                    {/* Delhi */}
+                    <path d="M350.5 325l-0.3 0-0.3 0.5-0.4 0.1-0.7-0.2-0.6 0.4-0.6 0.3-0.2 0.3 0.5 0.5-0.1 0.6-0.7 0.4-0.5 0.1-0.8 0.2-0.4-0.7-0.6-0.3-0.5-0.3-0.2-1.1 0.1-0.3-0.5-0.4-0.5-0.4-0.4 0.2-0.2-0.1-0.2-0.1-0.6-0.4-0.1 0-0.5-0.3 0.3 0.5-0.1 0.4-0.8-0.3-0.9 0.3-0.3-0.1-0.7 0-0.4 0-0.4 0.2 0-0.4-0.5-0.6-0.6-0.5-0.1-0.8 0-0.2 0.6-0.1 0.6-1.4 0.4 0.2 0.5-0.2 0.2-0.5 0.1-0.5 0.6-0.2 0.1 0 0.1-0.6-0.3-0.7 0.3-0.9-0.4-0.4 0.3-0.4-0.1-0.7-0.2-0.3 0.3-0.4 0.3-0.4 0.6-0.2 0.1-0.1 0.6 0.1 0.7 0 0.2-0.5 0.3-0.6 0.9-0.1 0.5 0.1 0.2 0.2 0.6 0 0.1 0.4 0.5 0.1 0.3-0.4 0.6 0 0.1-0.1 0.1 0 0.3 0.1 0.4 0.8-0.1 0.7-0.5 0.4 0 0.2 0.3 0.2 0.2 0.1 0.3-0.1-0.1 0.3 0.2 0.2 0.5 0.5 0.2 0.1 0.1 0.4 0.2 0 0.2 0.1 0.3 0.6 0.3 0.3 0-0.1 0.6-0.2 0.1 0.2 0.2 0.6-0.3 0.6-0.1 0.9 0.7 0.7-0.3 0.5-0.5 0.2-0.4 0.5 0 0.1 0.2 0.9 0.4 0.3 0.4 0.5 0.2 0.3 0 0.2z" 
+                      fill="url(#india-gradient)" stroke="#64748b" strokeWidth="1" />
+
+                    {/* Goa */}
+                    <path d="M262.6 706l0.4 0.1 0.9-0.2 0-0.5 0.6 0.2 0.7 0.4 0.2-0.5 0.7 0.4 0.1 0.8 0.2 0.2 0 0.8-0.3 0.7 0.5 0.3 0.4 0.8-0.2 0.4-0.7 0.7 0.7 1.3-0.2 0.5 0.4 1.2 0.5 0.1 0.6 0.3-0.1 1.1 0.5 1-0.2 0.3-0.9-0.1-0.7 0.4-0.4 0.9 1.1 0.4 0.5 1.2-0.3 0.7-0.6 0.5 0.1 0.6-0.3 0.6 0.2 0.9 0.4 0.8-0.4 0.3z" 
+                      fill="url(#india-gradient)" stroke="#64748b" strokeWidth="1" />
+                  </g>
 
                   {/* City dots (background) */}
                   {Object.entries(cityCoordinates).map(([city, coords]) => {
-                    const pos = latLngToSvg(coords.lat, coords.lng)
                     if (city === source || city === destination) return null
                     return (
                       <circle
                         key={city}
-                        cx={pos.x}
-                        cy={pos.y}
-                        r={0.8}
+                        cx={coords.x}
+                        cy={coords.y}
+                        r={6}
                         fill="hsl(var(--muted-foreground))"
-                        opacity={0.3}
+                        opacity={0.25}
                       />
                     )
                   })}
@@ -317,7 +250,7 @@ export function IndiaRouteMap({ source, destination, isLoading }: IndiaRouteMapP
                               key={segment.id}
                               d={`M ${startPoint.x} ${startPoint.y} Q ${midPoint.x} ${midPoint.y} ${endPoint.x} ${endPoint.y}`}
                               stroke={getRiskColor(segment.risk)}
-                              strokeWidth={hoveredSegment?.id === segment.id ? 3 : 2}
+                              strokeWidth={hoveredSegment?.id === segment.id ? 14 : 10}
                               strokeLinecap="round"
                               fill="none"
                               initial={{ pathLength: 0 }}
@@ -327,7 +260,7 @@ export function IndiaRouteMap({ source, destination, isLoading }: IndiaRouteMapP
                               onMouseLeave={() => setHoveredSegment(null)}
                               className="cursor-pointer"
                               style={{ 
-                                filter: hoveredSegment?.id === segment.id ? `drop-shadow(0 0 4px ${getRiskColor(segment.risk)})` : "none",
+                                filter: hoveredSegment?.id === segment.id ? `drop-shadow(0 0 8px ${getRiskColor(segment.risk)})` : "none",
                               }}
                             />
                           )
@@ -343,19 +276,19 @@ export function IndiaRouteMap({ source, destination, isLoading }: IndiaRouteMapP
                         <circle
                           cx={sourceCoords.x}
                           cy={sourceCoords.y}
-                          r={4}
+                          r={18}
                           fill="#3b82f6"
                           stroke="#1e40af"
-                          strokeWidth={0.8}
+                          strokeWidth={3}
                         />
                         <circle
                           cx={sourceCoords.x}
                           cy={sourceCoords.y}
-                          r={6}
+                          r={28}
                           fill="none"
                           stroke="#3b82f6"
-                          strokeWidth={0.4}
-                          opacity={0.5}
+                          strokeWidth={2}
+                          opacity={0.4}
                         />
                       </motion.g>
 
@@ -368,61 +301,81 @@ export function IndiaRouteMap({ source, destination, isLoading }: IndiaRouteMapP
                         <circle
                           cx={destCoords.x}
                           cy={destCoords.y}
-                          r={4}
+                          r={18}
                           fill="#06b6d4"
                           stroke="#0e7490"
-                          strokeWidth={0.8}
+                          strokeWidth={3}
                         />
                         <circle
                           cx={destCoords.x}
                           cy={destCoords.y}
-                          r={6}
+                          r={28}
                           fill="none"
                           stroke="#06b6d4"
-                          strokeWidth={0.4}
-                          opacity={0.5}
+                          strokeWidth={2}
+                          opacity={0.4}
                         />
+                      </motion.g>
+
+                      {/* Origin label */}
+                      <motion.g
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                      >
+                        <rect
+                          x={sourceCoords.x - 50}
+                          y={sourceCoords.y - 50}
+                          width={100}
+                          height={24}
+                          rx={12}
+                          fill="rgba(59, 130, 246, 0.9)"
+                        />
+                        <text
+                          x={sourceCoords.x}
+                          y={sourceCoords.y - 34}
+                          textAnchor="middle"
+                          fill="white"
+                          fontSize="14"
+                          fontWeight="600"
+                        >
+                          {source}
+                        </text>
+                      </motion.g>
+
+                      {/* Destination label */}
+                      <motion.g
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.9 }}
+                      >
+                        <rect
+                          x={destCoords.x - 50}
+                          y={destCoords.y + 30}
+                          width={100}
+                          height={24}
+                          rx={12}
+                          fill="rgba(6, 182, 212, 0.9)"
+                        />
+                        <text
+                          x={destCoords.x}
+                          y={destCoords.y + 46}
+                          textAnchor="middle"
+                          fill="white"
+                          fontSize="14"
+                          fontWeight="600"
+                        >
+                          {destination}
+                        </text>
                       </motion.g>
                     </g>
                   )}
                 </svg>
 
-                {/* City labels */}
-                {hasRoute && sourceCoords && destCoords && (
-                  <>
-                    <motion.div
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 }}
-                      className="absolute flex items-center gap-1 text-xs font-semibold text-blue-400 bg-background/80 px-2 py-0.5 rounded-full border border-blue-500/30"
-                      style={{
-                        left: `calc(50% + ${(sourceCoords.x - 50) * 3.8}px - 24px)`,
-                        top: `calc(50% + ${(sourceCoords.y - 50) * 4.2}px - 32px)`,
-                      }}
-                    >
-                      <MapPin className="h-3 w-3" />
-                      {source}
-                    </motion.div>
-                    <motion.div
-                      initial={{ opacity: 0, y: -5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.9 }}
-                      className="absolute flex items-center gap-1 text-xs font-semibold text-cyan-400 bg-background/80 px-2 py-0.5 rounded-full border border-cyan-500/30"
-                      style={{
-                        left: `calc(50% + ${(destCoords.x - 50) * 3.8}px - 24px)`,
-                        top: `calc(50% + ${(destCoords.y - 50) * 4.2}px + 20px)`,
-                      }}
-                    >
-                      <MapPin className="h-3 w-3" />
-                      {destination}
-                    </motion.div>
-                  </>
-                )}
-
                 {/* Empty state - shown ON TOP of map */}
                 {!hasRoute && !isLoading && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="text-center bg-background/70 backdrop-blur-sm rounded-xl px-6 py-4 border border-border/50 shadow-lg">
+                    <div className="text-center bg-background/80 backdrop-blur-sm rounded-xl px-6 py-4 border border-border/50 shadow-lg">
                       <MapPin className="h-10 w-10 text-primary/50 mx-auto mb-2" />
                       <p className="text-sm font-medium text-foreground">
                         Enter a route to visualize on India map
@@ -447,7 +400,7 @@ export function IndiaRouteMap({ source, destination, isLoading }: IndiaRouteMapP
                 className="absolute z-20 bg-popover border border-border rounded-lg p-3 shadow-xl min-w-[200px] pointer-events-none"
                 style={{
                   left: Math.min(mousePos.x + 16, 280),
-                  top: Math.min(mousePos.y - 10, 320),
+                  top: Math.min(mousePos.y - 10, 380),
                 }}
               >
                 <div className="flex items-center gap-2 mb-2">
