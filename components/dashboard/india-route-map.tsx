@@ -111,7 +111,7 @@ export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaR
   useEffect(() => {
     if (!mapContainer.current || map.current) return
 
-    mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || ""
+    mapboxgl.accessToken = "pk.eyJ1Ijoic2FuZGUyNTMiLCJhIjoiY21vcGVyZWFiMHd6NDJwczZ6NnZtZHExdyJ9.yRf2XiwCwRB1hk_FDdOnQw"
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
