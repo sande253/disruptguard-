@@ -86,12 +86,13 @@ export function RiskForecastChart() {
               <AreaChart data={forecastData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="riskGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.6} />
+                    <stop offset="50%" stopColor="#3b82f6" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.05} />
                   </linearGradient>
                   <linearGradient id="confidenceGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.2} />
-                    <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#64748b" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#64748b" stopOpacity={0.05} />
                   </linearGradient>
                 </defs>
                 <XAxis
@@ -127,8 +128,8 @@ export function RiskForecastChart() {
                 <Area
                   type="monotone"
                   dataKey="risk"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
+                  stroke="#60a5fa"
+                  strokeWidth={3}
                   fill="url(#riskGradient)"
                   fillOpacity={1}
                 />

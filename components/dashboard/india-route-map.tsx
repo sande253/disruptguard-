@@ -267,12 +267,12 @@ export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaR
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="relative h-[420px] w-full rounded-xl overflow-hidden bg-slate-900">
+        <div className="relative h-[520px] w-full rounded-xl overflow-hidden bg-slate-900">
           {/* Map container */}
           <div 
             ref={mapContainer} 
             className="absolute inset-0 w-full h-full"
-            style={{ minHeight: "420px" }}
+            style={{ minHeight: "520px" }}
           />
 
           <AnimatePresence mode="wait">
