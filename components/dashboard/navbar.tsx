@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Bell, ChevronDown } from "lucide-react"
+import { Search, Bell, ChevronDown, Sparkles } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -14,7 +14,11 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 
-export function Navbar() {
+interface NavbarProps {
+  onOpenAI?: () => void
+}
+
+export function Navbar({ onOpenAI }: NavbarProps) {
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       {/* Search */}
@@ -28,6 +32,17 @@ export function Navbar() {
 
       {/* Right side */}
       <div className="flex items-center gap-4">
+        {/* AI Assistant */}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="gap-2 text-muted-foreground hover:text-foreground"
+          onClick={onOpenAI}
+        >
+          <Sparkles className="h-4 w-4 text-primary" />
+          <span className="hidden md:inline">Ask AI</span>
+        </Button>
+
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5 text-muted-foreground" />

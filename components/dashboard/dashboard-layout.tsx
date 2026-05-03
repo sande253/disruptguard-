@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Sidebar } from "./sidebar"
 import { Navbar } from "./navbar"
+import { AIAssistantPanel } from "./ai-assistant-panel"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -11,6 +12,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarWidth, setSidebarWidth] = useState(240)
+  const [isAIOpen, setIsAIOpen] = useState(false)
 
   useEffect(() => {
     // Listen for sidebar collapse/expand
@@ -39,9 +41,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         animate={{ marginLeft: sidebarWidth }}
         transition={{ duration: 0.2, ease: "easeInOut" }}
       >
-        <Navbar />
+        <Navbar onOpenAI={() => setIsAIOpen(true)} />
         <main className="p-6">{children}</main>
       </motion.div>
+
+      {/* AI Assistant Panel */}
+      <AIAssistantPanel
+        isOpen={isAIOpen}
+        onClose={() => setIsAIOpen(false)}
+        currentRoute="Hyderabad → Chennai"
+      />
     </div>
   )
 }
