@@ -19,7 +19,7 @@ import {
   Calendar as CalendarIcon,
   Clock,
   FileSpreadsheet,
-  FilePdf,
+  File,
   Plus,
   Trash2,
   RefreshCw,
@@ -194,7 +194,7 @@ export default function ReportsPage() {
                       <SelectContent className="bg-popover">
                         <SelectItem value="pdf">
                           <div className="flex items-center gap-2">
-                            <FilePdf className="h-4 w-4 text-red-400" />
+                            <File className="h-4 w-4 text-red-400" />
                             PDF Document
                           </div>
                         </SelectItem>
@@ -264,7 +264,7 @@ export default function ReportsPage() {
                             report.format === "pdf" ? "bg-red-500/10" : "bg-green-500/10"
                           )}>
                             {report.format === "pdf" ? (
-                              <FilePdf className="h-5 w-5 text-red-400" />
+                              <File className="h-5 w-5 text-red-400" />
                             ) : (
                               <FileSpreadsheet className="h-5 w-5 text-green-400" />
                             )}

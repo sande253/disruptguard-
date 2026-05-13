@@ -15,6 +15,7 @@ import {
   Warehouse,
   AlertTriangle,
   TrendingDown,
+  TrendingUp,
   Search,
   RefreshCw,
   MapPin,
