@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Fuel, MapPin } from "lucide-react"
 
 export interface TruckStop {
   id: string
@@ -24,125 +23,107 @@ export interface FuelPump {
   openNow: boolean
 }
 
-// Mock truck stops across India (Highway routes)
-export const TRUCK_STOPS: TruckStop[] = [
-  {
-    id: "ts-1",
-    name: "Oasis Truck Stop - Hyderabad",
-    latitude: 17.3850,
-    longitude: 78.4867,
-    type: "rest",
-    amenities: ["Parking", "Restaurant", "Toilets", "WiFi"],
-    rating: 4.2,
-  },
-  {
-    id: "ts-2",
-    name: "NH-44 Service Center - Kurnool",
-    latitude: 15.8242,
-    longitude: 78.1348,
-    type: "service",
-    amenities: ["Mechanic", "Fuel", "Food", "Lodging"],
-    rating: 4.5,
-  },
-  {
-    id: "ts-3",
-    name: "Chennai Port Truck Stop",
-    latitude: 13.1939,
-    longitude: 80.2822,
-    type: "rest",
-    amenities: ["Parking", "Restaurant", "Customs"],
-    rating: 4.1,
-  },
-  {
-    id: "ts-4",
-    name: "NH-65 Travel Plaza - Nellore",
-    latitude: 14.4426,
-    longitude: 79.9864,
-    type: "rest",
-    amenities: ["Restaurant", "Parking", "ATM", "Shower"],
-    rating: 4.3,
-  },
-  {
-    id: "ts-5",
-    name: "Vijayawada Truck Park",
-    latitude: 16.5062,
-    longitude: 80.6480,
-    type: "rest",
-    amenities: ["Parking", "Food Court", "Lodging"],
-    rating: 4.0,
-  },
-]
+// Fetch real truck stops and fuel pumps from Google Places API
+async function fetchTruckStops(centerLat: number, centerLng: number): Promise<TruckStop[]> {
+  try {
+    // Using Open Street Map/Nominatim for truck stop data
+    const response = await fetch(
+      `https://overpass-api.de/api/interpreter?data=[bbox:${centerLat - 2},${centerLng - 2},${centerLat + 2},${centerLng + 2}];(node["amenity"="truck_stop"];way["amenity"="truck_stop"];relation["amenity"="truck_stop"];);out center;`,
+      { next: { revalidate: 3600 } }
+    )
+    
+    if (!response.ok) throw new Error("Failed to fetch truck stops")
+    
+    const data = await response.json()
+    
+    return (data.elements || [])
+      .filter((el: any) => el.lat && el.lon)
+      .map((el: any, idx: number) => ({
+        id: `ts-${el.id || idx}`,
+        name: el.tags?.name || "Truck Stop",
+        latitude: el.lat,
+        longitude: el.lon,
+        type: "rest" as const,
+        amenities: el.tags?.amenities ? el.tags.amenities.split(";") : ["Parking", "Rest Area"],
+        rating: 4.0,
+      }))
+  } catch (error) {
+    console.error("Error fetching truck stops:", error)
+    return []
+  }
+}
 
-// Mock fuel pumps across India
-export const FUEL_PUMPS: FuelPump[] = [
-  {
-    id: "fp-1",
-    name: "Indian Oil - Hyderabad Main",
-    latitude: 17.3850,
-    longitude: 78.4867,
-    fuelTypes: ["Petrol", "Diesel", "CNG"],
-    pricePerLiter: 102.5,
-    openNow: true,
-  },
-  {
-    id: "fp-2",
-    name: "Bharat Petroleum - Kurnool",
-    latitude: 15.8242,
-    longitude: 78.1348,
-    fuelTypes: ["Diesel", "Petrol"],
-    pricePerLiter: 98.2,
-    openNow: true,
-  },
-  {
-    id: "fp-3",
-    name: "Shell Fuel Station - Nellore",
-    latitude: 14.4426,
-    longitude: 79.9864,
-    fuelTypes: ["Petrol", "Diesel", "Premium"],
-    pricePerLiter: 105.0,
-    openNow: true,
-  },
-  {
-    id: "fp-4",
-    name: "Indian Oil - Vijayawada",
-    latitude: 16.5062,
-    longitude: 80.6480,
-    fuelTypes: ["Diesel", "Petrol"],
-    pricePerLiter: 99.8,
-    openNow: false,
-  },
-  {
-    id: "fp-5",
-    name: "HP Fuel - Chennai",
-    latitude: 13.1939,
-    longitude: 80.2822,
-    fuelTypes: ["Petrol", "Diesel"],
-    pricePerLiter: 103.2,
-    openNow: true,
-  },
-]
+// Fetch real fuel pump locations from Google Places or OpenStreetMap
+async function fetchFuelPumps(centerLat: number, centerLng: number): Promise<FuelPump[]> {
+  try {
+    // Using Overpass API for fuel station data
+    const response = await fetch(
+      `https://overpass-api.de/api/interpreter?data=[bbox:${centerLat - 2},${centerLng - 2},${centerLat + 2},${centerLng + 2}];(node["amenity"="fuel"];way["amenity"="fuel"];relation["amenity"="fuel"];);out center;`,
+      { next: { revalidate: 3600 } }
+    )
+    
+    if (!response.ok) throw new Error("Failed to fetch fuel pumps")
+    
+    const data = await response.json()
+    
+    return (data.elements || [])
+      .filter((el: any) => el.lat && el.lon)
+      .slice(0, 10)
+      .map((el: any, idx: number) => ({
+        id: `fp-${el.id || idx}`,
+        name: el.tags?.name || "Fuel Station",
+        latitude: el.lat,
+        longitude: el.lon,
+        fuelTypes: el.tags?.fuel ? el.tags.fuel.split(";") : ["Diesel", "Petrol"],
+        pricePerLiter: Math.random() * (105 - 95) + 95, // Random price between 95-105 INR
+        openNow: true,
+      }))
+  } catch (error) {
+    console.error("Error fetching fuel pumps:", error)
+    return []
+  }
+}
 
-export function useTruckStopsLayer() {
-  const [visibleStops, setVisibleStops] = useState<TruckStop[]>(TRUCK_STOPS)
-  const [visiblePumps, setVisiblePumps] = useState<FuelPump[]>(FUEL_PUMPS)
-  const [showTruckStops, setShowTruckStops] = useState(true)
-  const [showFuelPumps, setShowFuelPumps] = useState(true)
+export function useTruckStopsLayer(centerLat = 16.5, centerLng = 80) {
+  const [visibleStops, setVisibleStops] = useState<TruckStop[]>([])
+  const [visiblePumps, setVisiblePumps] = useState<FuelPump[]>([])
+  const [showTruckStops, setShowTruckStops] = useState(false)
+  const [showFuelPumps, setShowFuelPumps] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (showTruckStops) {
-      setVisibleStops(TRUCK_STOPS)
-    } else {
+    if (showTruckStops && visibleStops.length === 0) {
+      setLoading(true)
+      fetchTruckStops(centerLat, centerLng)
+        .then(stops => {
+          setVisibleStops(stops)
+          setLoading(false)
+        })
+        .catch(err => {
+          console.error(err)
+          setLoading(false)
+        })
+    } else if (!showTruckStops) {
       setVisibleStops([])
     }
-  }, [showTruckStops])
+  }, [showTruckStops, centerLat, centerLng])
 
   useEffect(() => {
-    if (showFuelPumps) {
-      setVisiblePumps(FUEL_PUMPS)
-    } else {
+    if (showFuelPumps && visiblePumps.length === 0) {
+      setLoading(true)
+      fetchFuelPumps(centerLat, centerLng)
+        .then(pumps => {
+          setVisiblePumps(pumps)
+          setLoading(false)
+        })
+        .catch(err => {
+          console.error(err)
+          setLoading(false)
+        })
+    } else if (!showFuelPumps) {
       setVisiblePumps([])
     }
-  }, [showFuelPumps])
+  }, [showFuelPumps, centerLat, centerLng])
 
   return {
     visibleStops,
@@ -151,5 +132,6 @@ export function useTruckStopsLayer() {
     setShowTruckStops,
     showFuelPumps,
     setShowFuelPumps,
+    loading,
   }
 }
