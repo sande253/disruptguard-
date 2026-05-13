@@ -7,7 +7,7 @@ import "mapbox-gl/dist/mapbox-gl.css"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { MapPin, Loader2, Fuel, MapPin as TruckStopIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useTruckStopsLayer, TRUCK_STOPS, FUEL_PUMPS } from "./truck-stops-layer"
+import { useTruckStopsLayer } from "./truck-stops-layer"
 
 interface IndiaRouteMapProps {
   source: string | null
@@ -267,11 +267,11 @@ export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaR
 
   // Add truck stops layer to map
   const addTruckStopsLayer = () => {
-    if (!map.current || !showTruckStops) return
+    if (!map.current || !showTruckStops || visibleStops.length === 0) return
 
     const geojson = {
       type: "FeatureCollection" as const,
-      features: TRUCK_STOPS.map(stop => ({
+      features: visibleStops.map(stop => ({
         type: "Feature" as const,
         properties: {
           title: stop.name,
@@ -307,11 +307,11 @@ export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaR
 
   // Add fuel pumps layer to map
   const addFuelPumpsLayer = () => {
-    if (!map.current || !showFuelPumps) return
+    if (!map.current || !showFuelPumps || visiblePumps.length === 0) return
 
     const geojson = {
       type: "FeatureCollection" as const,
-      features: FUEL_PUMPS.map(pump => ({
+      features: visiblePumps.map(pump => ({
         type: "Feature" as const,
         properties: {
           title: pump.name,
