@@ -6,7 +6,7 @@ export interface LiveAlert {
   id: string
   title: string
   severity: "critical" | "warning" | "info"
-  source: "Weather" | "Traffic" | "News" | "Port"
+  source: "Weather" | "Traffic"
   timestamp: string
   affectsRoute: boolean
   impact?: string
@@ -102,54 +102,18 @@ async function fetchTrafficData(): Promise<LiveAlert[]> {
 
 // Fetch news from NewsAPI
 async function fetchNewsData(): Promise<LiveAlert[]> {
-  try {
-    const apiKey = process.env.NEWSAPI_KEY
-    
-    if (!apiKey) {
-      console.warn("NewsAPI key not configured")
-      return []
-    }
-
-    const response = await fetch(
-      `https://newsapi.org/v2/everything?q=supply+chain+india+logistics&sortBy=publishedAt&pageSize=5&apiKey=${apiKey}`,
-      { cache: "no-store" }
-    )
-    
-    const data = await response.json()
-    const alerts: LiveAlert[] = []
-
-    if (data.articles && data.articles.length > 0) {
-      data.articles.slice(0, 2).forEach((article: any, index: number) => {
-        alerts.push({
-          id: `news-${index}`,
-          title: article.title,
-          severity: "info",
-          source: "News",
-          timestamp: new Date(article.publishedAt).toISOString(),
-          affectsRoute: false,
-          impact: article.description?.substring(0, 50),
-          location: article.source?.name,
-        })
-      })
-    }
-
-    return alerts
-  } catch (error) {
-    console.error("Error fetching news data:", error)
-    return []
-  }
+  return [] // Only weather and traffic alerts - news disabled
 }
 
-// Main function to fetch all live alerts
+// Main function to fetch all live alerts - weather and traffic only
 export const fetchLiveAlerts = cache(async (): Promise<LiveAlert[]> => {
   try {
-    const [weatherAlerts, trafficAlerts, newsAlerts] = await Promise.all([
+    const [weatherAlerts, trafficAlerts] = await Promise.all([
       fetchWeatherData(),
       fetchTrafficData(),
-      fetchNewsData(),
     ])
 
-    const allAlerts = [...weatherAlerts, ...trafficAlerts, ...newsAlerts]
+    const allAlerts = [...weatherAlerts, ...trafficAlerts]
     return allAlerts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
   } catch (error) {
     console.error("Error fetching live alerts:", error)

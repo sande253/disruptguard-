@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { Cloud, Car, Ship, AlertTriangle, ArrowRight, MapPin } from "lucide-react"
+import { Cloud, Car, AlertTriangle, ArrowRight, MapPin } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -15,8 +15,6 @@ import { fetchLiveAlerts, LiveAlert } from "@/lib/news-service"
 const sourceIcons = {
   Weather: Cloud,
   Traffic: Car,
-  News: AlertTriangle,
-  Port: Ship,
 }
 
 const severityDot = {
