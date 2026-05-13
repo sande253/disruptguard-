@@ -336,25 +336,39 @@ export function RouteInputPanel({ onAnalyze, isLoading }: RouteInputPanelProps) 
 
             {/* Add Stop Input */}
             <div className="relative" ref={stopRef}>
-              <label className="text-xs font-medium text-muted-foreground">
-                {stops.length > 0 ? "Add another stop" : "Add stops (optional)"}
-              </label>
-              <div className="relative mt-1.5">
-                <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search and add intermediate stops..."
-                  value={activeStopInput}
-                  onChange={(e) => {
-                    setActiveStopInput(e.target.value)
-                    if (e.target.value.length > 1) {
-                      fetchRealLocations(e.target.value).then(setStopSuggestions)
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <label className="text-xs font-medium text-muted-foreground block mb-1.5">
+                    {stops.length > 0 ? "Add another stop" : "Add stops (optional)"}
+                  </label>
+                  <Input
+                    placeholder="Search location..."
+                    value={activeStopInput}
+                    onChange={(e) => {
+                      setActiveStopInput(e.target.value)
+                      if (e.target.value.length > 1) {
+                        fetchRealLocations(e.target.value).then(setStopSuggestions)
+                        setShowStopDropdown(true)
+                      }
+                    }}
+                    onFocus={() => activeStopInput.length > 1 && setShowStopDropdown(true)}
+                    className="pl-9 bg-secondary border-border"
+                  />
+                  <MapPin className="absolute left-3 top-[2.25rem] h-4 w-4 text-muted-foreground" />
+                </div>
+                <Button
+                  onClick={() => {
+                    if (activeStopInput.length > 0) {
                       setShowStopDropdown(true)
                     }
                   }}
-                  onFocus={() => activeStopInput.length > 1 && setShowStopDropdown(true)}
-                  className="pl-9 bg-secondary border-border"
-                />
-                <Plus className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
+                  variant="outline"
+                  size="sm"
+                  className="gap-1"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add
+                </Button>
               </div>
 
               {/* Stop Suggestions */}

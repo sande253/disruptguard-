@@ -152,160 +152,217 @@ export function IndiaRouteMap({ source, destination, stops, isLoading = false }:
   useEffect(() => {
     if (!map.current || !mapLoaded) return
 
-    // Clear previous markers
-    markersRef.current.forEach(marker => marker.remove())
-    markersRef.current = []
+    // Define async function inside effect
+    const drawRoute = async () => {
+      // Clear previous markers
+      markersRef.current.forEach(marker => marker.remove())
+      markersRef.current = []
 
-    // Remove previous route layer and source
-    if (map.current.getLayer("route-glow")) {
-      map.current.removeLayer("route-glow")
-    }
-    if (map.current.getLayer("route")) {
-      map.current.removeLayer("route")
-    }
-    if (map.current.getSource("route")) {
-      map.current.removeSource("route")
-    }
+      // Remove previous route layer and source
+      if (map.current.getLayer("route-glow")) {
+        map.current.removeLayer("route-glow")
+      }
+      if (map.current.getLayer("route")) {
+        map.current.removeLayer("route")
+      }
+      if (map.current.getSource("route")) {
+        map.current.removeSource("route")
+      }
 
-    // Reset state
-    setRouteError(null)
-    setRouteDistance(null)
+      // Reset state
+      setRouteError(null)
+      setRouteDistance(null)
 
-    if (!source || !destination) {
-      // Reset to India view
-      map.current.flyTo({
-        center: INDIA_CENTER,
-        zoom: DEFAULT_ZOOM,
-        duration: 1000,
-      })
-      return
-    }
+      if (!source || !destination) {
+        // Reset to India view
+        map.current.flyTo({
+          center: INDIA_CENTER,
+          zoom: DEFAULT_ZOOM,
+          duration: 1000,
+        })
+        return
+      }
 
-    const sourceCoords = getCityCoordinates(source)
-    const destCoords = getCityCoordinates(destination)
+      const sourceCoords = getCityCoordinates(source)
+      const destCoords = getCityCoordinates(destination)
 
-    if (!sourceCoords || !destCoords) {
-      setRouteError("City not found. Try: Mumbai, Delhi, Chennai, Hyderabad, Bangalore...")
-      return
-    }
+      if (!sourceCoords || !destCoords) {
+        setRouteError("City not found. Try: Mumbai, Delhi, Chennai, Hyderabad, Bangalore...")
+        return
+      }
 
-    // Build waypoints array including stops
-    const allWaypoints: [number, number][] = [sourceCoords]
-    
-    // Add stops in order if they have valid coordinates
-    if (stops && stops.length > 0) {
-      stops.forEach(stop => {
-        if (stop.lat && stop.lng) {
-          allWaypoints.push([stop.lng, stop.lat])
+      // Build waypoints array including stops
+      const allWaypoints: [number, number][] = [sourceCoords]
+      
+      // Add stops in order if they have valid coordinates
+      if (stops && stops.length > 0) {
+        stops.forEach(stop => {
+          if (stop.lat && stop.lng) {
+            allWaypoints.push([stop.lng, stop.lat])
+          }
+        })
+      }
+      
+      allWaypoints.push(destCoords)
+
+      // Fetch real routing from Mapbox Directions API
+      try {
+        const directionsResponse = await fetch("/api/directions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ coordinates: allWaypoints }),
+        })
+
+        if (!directionsResponse.ok) {
+          throw new Error("Failed to get route")
         }
-      })
-    }
-    
-    allWaypoints.push(destCoords)
 
-    // Calculate total distance through all waypoints
-    let totalDistance = 0
-    for (let i = 0; i < allWaypoints.length - 1; i++) {
-      totalDistance += calculateDistance(allWaypoints[i], allWaypoints[i + 1])
-    }
-    setRouteDistance(totalDistance)
+        const routeData = await directionsResponse.json()
+        const routeCoordinates = routeData.coordinates
+        
+        setRouteDistance(routeData.distance / 1000) // Convert to km
 
-    // Get curved route points through all waypoints
-    let allRoutePoints: [number, number][] = []
-    for (let i = 0; i < allWaypoints.length - 1; i++) {
-      const segmentPoints = getRoutePoints(allWaypoints[i], allWaypoints[i + 1])
-      // Remove last point to avoid duplication
-      allRoutePoints = allRoutePoints.concat(segmentPoints.slice(0, -1))
-    }
-    // Add final point
-    allRoutePoints.push(allWaypoints[allWaypoints.length - 1])
+        // Add route source with real coordinates from Mapbox
+        map.current.addSource("route", {
+          type: "geojson",
+          data: {
+            type: "Feature",
+            properties: {},
+            geometry: {
+              type: "LineString",
+              coordinates: routeCoordinates,
+            },
+          },
+        })
 
-    // Add route source
-    map.current.addSource("route", {
-      type: "geojson",
-      data: {
-        type: "Feature",
-        properties: {},
-        geometry: {
-          type: "LineString",
-          coordinates: allRoutePoints,
-        },
-      },
-    })
+        // Fetch fuel stops and layovers for this route
+        const stopsResponse = await fetch("/api/stops", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ routeCoordinates }),
+        })
 
-    // Add glow effect layer
-    map.current.addLayer({
-      id: "route-glow",
-      type: "line",
-      source: "route",
-      layout: {
-        "line-join": "round",
-        "line-cap": "round",
-      },
-      paint: {
-        "line-color": "#3b82f6",
-        "line-width": 12,
-        "line-opacity": 0.3,
-        "line-blur": 8,
-      },
-    })
+        let fuelStops: any[] = []
+        let layovers: any[] = []
 
-    // Add main route layer
-    map.current.addLayer({
-      id: "route",
-      type: "line",
-      source: "route",
-      layout: {
-        "line-join": "round",
-        "line-cap": "round",
-      },
-      paint: {
-        "line-color": "#3b82f6",
-        "line-width": 4,
-        "line-opacity": 0.9,
-      },
-    })
+        if (stopsResponse.ok) {
+          const stopsData = await stopsResponse.json()
+          fuelStops = stopsData.fuelStops || []
+          layovers = stopsData.layovers || []
+        }
 
-    // Add origin marker (blue)
-    const originMarker = new mapboxgl.Marker({
-      color: "#3b82f6",
-    })
-      .setLngLat(sourceCoords)
-      .setPopup(new mapboxgl.Popup().setHTML(`<strong>${source}</strong><br/>Origin`))
-      .addTo(map.current)
-    markersRef.current.push(originMarker)
+        // Add glow effect layer
+        map.current.addLayer({
+          id: "route-glow",
+          type: "line",
+          source: "route",
+          layout: {
+            "line-join": "round",
+            "line-cap": "round",
+          },
+          paint: {
+            "line-color": "#3b82f6",
+            "line-width": 12,
+            "line-opacity": 0.3,
+            "line-blur": 8,
+          },
+        })
 
-    // Add stop markers (orange/yellow)
-    if (stops && stops.length > 0) {
-      stops.forEach((stop, idx) => {
-        if (stop.lat && stop.lng) {
-          const stopMarker = new mapboxgl.Marker({
-            color: "#f59e0b",
+        // Add main route layer
+        map.current.addLayer({
+          id: "route",
+          type: "line",
+          source: "route",
+          layout: {
+            "line-join": "round",
+            "line-cap": "round",
+          },
+          paint: {
+            "line-color": "#3b82f6",
+            "line-width": 4,
+            "line-opacity": 0.9,
+          },
+        })
+
+        // Add origin marker (blue)
+        const originMarker = new mapboxgl.Marker({
+          color: "#3b82f6",
+        })
+          .setLngLat(sourceCoords)
+          .setPopup(new mapboxgl.Popup().setHTML(`<strong>${source}</strong><br/>Origin`))
+          .addTo(map.current)
+        markersRef.current.push(originMarker)
+
+        // Add stop markers (orange)
+        if (stops && stops.length > 0) {
+          stops.forEach((stop, idx) => {
+            if (stop.lat && stop.lng) {
+              const stopMarker = new mapboxgl.Marker({
+                color: "#f59e0b",
+              })
+                .setLngLat([stop.lng, stop.lat])
+                .setPopup(new mapboxgl.Popup().setHTML(`<strong>${stop.name}</strong><br/>Stop ${idx + 1}`))
+                .addTo(map.current!)
+              markersRef.current.push(stopMarker)
+            }
           })
-            .setLngLat([stop.lng, stop.lat])
-            .setPopup(new mapboxgl.Popup().setHTML(`<strong>${stop.name}</strong><br/>Stop ${idx + 1}`))
-            .addTo(map.current!)
-          markersRef.current.push(stopMarker)
         }
-      })
+
+        // Add fuel stop markers (pump icon - use marker with custom styling)
+        fuelStops.forEach((fuel) => {
+          const fuelMarker = new mapboxgl.Marker({
+            color: "#eab308",
+          })
+            .setLngLat([fuel.lng, fuel.lat])
+            .setPopup(
+              new mapboxgl.Popup().setHTML(
+                `<strong>⛽ ${fuel.name}</strong><br/>${fuel.amenities.join(", ")}`
+              )
+            )
+            .addTo(map.current!)
+          markersRef.current.push(fuelMarker)
+        })
+
+        // Add layover markers (hotel icon - use marker with custom styling)
+        layovers.forEach((layover) => {
+          const layoverMarker = new mapboxgl.Marker({
+            color: "#ec4899",
+          })
+            .setLngLat([layover.lng, layover.lat])
+            .setPopup(
+              new mapboxgl.Popup().setHTML(
+                `<strong>🏨 ${layover.name}</strong><br/>Rating: ${layover.rating || "N/A"}`
+              )
+            )
+            .addTo(map.current!)
+          markersRef.current.push(layoverMarker)
+        })
+
+        // Add destination marker (cyan)
+        const destMarker = new mapboxgl.Marker({
+          color: "#06b6d4",
+        })
+          .setLngLat(destCoords)
+          .setPopup(new mapboxgl.Popup().setHTML(`<strong>${destination}</strong><br/>Destination`))
+          .addTo(map.current)
+        markersRef.current.push(destMarker)
+
+        // Fit bounds to show the entire route including all waypoints
+        const bounds = new mapboxgl.LngLatBounds()
+        allWaypoints.forEach(point => bounds.extend(point))
+        fuelStops.forEach(fuel => bounds.extend([fuel.lng, fuel.lat]))
+        layovers.forEach(lay => bounds.extend([lay.lng, lay.lat]))
+        map.current.fitBounds(bounds, {
+          padding: 80,
+          duration: 1000,
+        })
+      } catch (error) {
+        console.error("[v0] Routing error:", error)
+        setRouteError("Failed to calculate route")
+      }
     }
 
-    // Add destination marker (cyan)
-    const destMarker = new mapboxgl.Marker({
-      color: "#06b6d4",
-    })
-      .setLngLat(destCoords)
-      .setPopup(new mapboxgl.Popup().setHTML(`<strong>${destination}</strong><br/>Destination`))
-      .addTo(map.current)
-    markersRef.current.push(destMarker)
-
-    // Fit bounds to show the entire route including all waypoints
-    const bounds = new mapboxgl.LngLatBounds()
-    allWaypoints.forEach(point => bounds.extend(point))
-    map.current.fitBounds(bounds, {
-      padding: 80,
-      duration: 1000,
-    })
+    drawRoute()
   }, [source, destination, stops, mapLoaded])
 
   const showLoading = isLoading || !mapLoaded
