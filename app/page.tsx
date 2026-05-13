@@ -1,7 +1,6 @@
 "use client"
 
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
-import { GoogleSearchBar } from "@/components/dashboard/google-search-bar"
 import { RouteInputPanel, RouteEmptyState } from "@/components/dashboard/route-input-panel"
 import { OptimizationSelector } from "@/components/dashboard/optimization-selector"
 import { IndiaRouteMap } from "@/components/dashboard/india-route-map"
@@ -24,32 +23,11 @@ export default function DashboardPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Google-style Search Bar - Hero Section */}
-        <div className="flex flex-col items-center gap-8 py-8">
-          <div className="text-center max-w-2xl">
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-orange-500 bg-clip-text text-transparent mb-2">
-              DisruptGuard
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              AI-powered supply chain intelligence. Search routes, track shipments, optimize logistics.
-            </p>
-          </div>
-          
-          <div className="w-full max-w-2xl">
-            <GoogleSearchBar
-              onSearch={(query, result) => {
-                console.log("Search:", query, result)
-              }}
-              placeholder="Search routes, locations, shipments..."
-            />
-          </div>
-        </div>
-
         {/* Page header */}
         <div className="flex flex-col gap-1">
-          <h2 className="text-2xl font-bold text-foreground">
+          <h1 className="text-2xl font-bold text-foreground">
             Supply Chain Decision Center
-          </h2>
+          </h1>
           <p className="text-sm text-muted-foreground">
             AI-powered risk intelligence and decision support for India logistics
           </p>
