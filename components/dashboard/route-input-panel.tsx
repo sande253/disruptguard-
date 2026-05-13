@@ -184,9 +184,9 @@ export function RouteInputPanel({ onAnalyze, isLoading }: RouteInputPanelProps) 
   return (
     <Card className="border-border bg-card">
       <CardContent className="p-4">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end">
+        <div className="flex flex-col gap-4 md:grid md:grid-cols-12 md:items-end">
           {/* Source Input */}
-          <div className="flex-1 space-y-1.5 relative" ref={sourceRef}>
+          <div className="md:col-span-2 space-y-1.5 relative" ref={sourceRef}>
             <label className="text-xs font-medium text-muted-foreground">
               Origin
             </label>
@@ -237,12 +237,12 @@ export function RouteInputPanel({ onAnalyze, isLoading }: RouteInputPanelProps) 
           </div>
 
           {/* Arrow indicator (desktop only) */}
-          <div className="hidden md:flex items-center justify-center pb-1">
+          <div className="hidden md:flex md:col-span-1 items-center justify-center pb-1">
             <ArrowRight className="h-4 w-4 text-muted-foreground" />
           </div>
 
           {/* Destination Input */}
-          <div className="flex-1 space-y-1.5 relative" ref={destRef}>
+          <div className="md:col-span-2 space-y-1.5 relative" ref={destRef}>
             <label className="text-xs font-medium text-muted-foreground">
               Destination
             </label>
@@ -292,8 +292,98 @@ export function RouteInputPanel({ onAnalyze, isLoading }: RouteInputPanelProps) 
             </AnimatePresence>
           </div>
 
+          {/* Add Stops Section */}
+          <div className="w-full md:col-span-4 space-y-2">
+            {stops.length > 0 && (
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">
+                  Stops ({stops.length})
+                </label>
+                <div className="space-y-1.5">
+                  {stops.map((stop, idx) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      className="flex items-center gap-2 px-3 py-2 bg-secondary/40 rounded-lg border border-border/50"
+                    >
+                      <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground">{stop.name}</p>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveStop(idx)}
+                        className="p-1 hover:bg-secondary rounded transition-colors"
+                      >
+                        <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                      </button>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Add Stop Input */}
+            <div className="relative" ref={stopRef}>
+              <label className="text-xs font-medium text-muted-foreground">
+                {stops.length > 0 ? "Add another stop" : "Add stops (optional)"}
+              </label>
+              <div className="relative mt-1.5">
+                <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search and add intermediate stops..."
+                  value={activeStopInput}
+                  onChange={(e) => {
+                    setActiveStopInput(e.target.value)
+                    if (e.target.value.length > 1) {
+                      fetchRealLocations(e.target.value).then(setStopSuggestions)
+                      setShowStopDropdown(true)
+                    }
+                  }}
+                  onFocus={() => activeStopInput.length > 1 && setShowStopDropdown(true)}
+                  className="pl-9 bg-secondary border-border"
+                />
+                <Plus className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
+              </div>
+
+              {/* Stop Suggestions */}
+              <AnimatePresence>
+                {showStopDropdown && stopSuggestions.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden"
+                  >
+                    <div className="max-h-48 overflow-y-auto">
+                      {stopSuggestions.map((suggestion, idx) => (
+                        <button
+                          key={idx}
+                          className="w-full px-4 py-2.5 text-left hover:bg-secondary/50 transition-colors flex items-center justify-between border-b border-border/30 last:border-b-0"
+                          onClick={() => handleAddStop(suggestion)}
+                        >
+                          <div className="flex items-center gap-3 flex-1">
+                            <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <div>
+                              <p className="text-sm font-medium text-foreground">{suggestion.name}</p>
+                              <p className="text-xs text-muted-foreground">{suggestion.region}</p>
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="text-[10px] shrink-0">
+                            {suggestion.type === "port" ? "Port" : "City"}
+                          </Badge>
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+
           {/* Transport Mode Dropdown */}
-          <div className="flex-1 md:max-w-[180px] space-y-1.5">
+          <div className="md:col-span-2 md:max-w-[180px] space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">
               Transport Mode
             </label>
@@ -315,7 +405,7 @@ export function RouteInputPanel({ onAnalyze, isLoading }: RouteInputPanelProps) 
           </div>
 
           {/* Analyze Button */}
-          <div className="md:pb-0">
+          <div className="md:col-span-2 md:pb-0">
             <Button
               onClick={handleAnalyze}
               disabled={!isValid || isLoading}
