@@ -195,8 +195,13 @@ export function RouteInputPanel({ onAnalyze, isLoading }: RouteInputPanelProps) 
               <Input
                 placeholder="Enter origin city"
                 value={source}
-                onChange={(e) => setSource(e.target.value)}
-                onFocus={() => setShowSourceDropdown(true)}
+                onChange={(e) => {
+                  setSource(e.target.value)
+                  if (e.target.value.length > 0) {
+                    setShowSourceDropdown(true)
+                  }
+                }}
+                onFocus={() => source.length > 0 && setShowSourceDropdown(true)}
                 className="pl-9 bg-secondary border-border"
               />
               <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
@@ -251,8 +256,13 @@ export function RouteInputPanel({ onAnalyze, isLoading }: RouteInputPanelProps) 
               <Input
                 placeholder="Enter destination city"
                 value={destination}
-                onChange={(e) => setDestination(e.target.value)}
-                onFocus={() => setShowDestDropdown(true)}
+                onChange={(e) => {
+                  setDestination(e.target.value)
+                  if (e.target.value.length > 0) {
+                    setShowDestDropdown(true)
+                  }
+                }}
+                onFocus={() => destination.length > 0 && setShowDestDropdown(true)}
                 className="pl-9 bg-secondary border-border"
               />
               <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />

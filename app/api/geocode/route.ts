@@ -10,12 +10,15 @@ export async function GET(request: NextRequest) {
 
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000)
+    const timeoutId = setTimeout(() => controller.abort(), 10000)
 
     const response = await fetch(
       `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=in&format=json&limit=50&addressdetails=1`,
       {
-        headers: { "Accept-Language": "en" },
+        headers: { 
+          "Accept-Language": "en",
+          "User-Agent": "DisruptGuard-App/1.0"
+        },
         signal: controller.signal,
       }
     )
@@ -23,12 +26,14 @@ export async function GET(request: NextRequest) {
     clearTimeout(timeoutId)
 
     if (!response.ok) {
+      console.error(`[v0] Nominatim returned ${response.status}`)
       throw new Error(`API error: ${response.status}`)
     }
 
     const data = await response.json()
 
     if (!Array.isArray(data)) {
+      console.error("[v0] Nominatim returned non-array response")
       return NextResponse.json([])
     }
 
@@ -43,9 +48,10 @@ export async function GET(request: NextRequest) {
         lng: parseFloat(result.lon),
       }))
 
+    console.log(`[v0] Geocoding returned ${results.length} results for "${query}"`)
     return NextResponse.json(results)
-  } catch (error) {
-    console.error("[v0] Geocoding API error:", error)
-    return NextResponse.json([], { status: 500 })
+  } catch (error: any) {
+    console.error("[v0] Geocoding API error:", error?.message || error)
+    return NextResponse.json([], { status: 200 }) // Return empty array instead of 500
   }
 }
