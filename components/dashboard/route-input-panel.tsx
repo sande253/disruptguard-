@@ -51,66 +51,44 @@ export function RouteInputPanel({ onAnalyze, isLoading }: RouteInputPanelProps) 
   const destRef = useRef<HTMLDivElement>(null)
   const stopRef = useRef<HTMLDivElement>(null)
 
-  // Fetch real locations from Nominatim API with retry logic
+  // Fetch locations from internal API route to avoid CORS issues
   const fetchRealLocations = async (query: string, retries = 3): Promise<LocationSuggestion[]> => {
     if (!query.trim() || query.length < 1) return []
 
     for (let attempt = 0; attempt < retries; attempt++) {
       try {
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 8000)
 
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=in&format=json&limit=50&addressdetails=1`,
-          { 
-            headers: { "Accept-Language": "en" },
-            signal: controller.signal
-          }
+          `/api/geocode?q=${encodeURIComponent(query)}`,
+          { signal: controller.signal }
         )
+        
         clearTimeout(timeoutId)
 
         if (!response.ok) throw new Error(`API error: ${response.status}`)
         
         const data = await response.json()
         
-        if (!Array.isArray(data)) return []
+        if (!Array.isArray(data) || data.length === 0) {
+          if (attempt < retries - 1) {
+            await new Promise(r => setTimeout(r, 300))
+            continue
+          }
+          return []
+        }
 
-        const results = data
-          .filter((result: any) => result.lat && result.lon)
-          .map((result: any) => ({
-            name: result.name || result.display_name.split(",")[0],
-            region: result.address?.state || result.address?.province || "India",
-            type: result.type === "port" || result.type === "harbour" ? "port" : "city",
-            category: "recent" as const,
-            lat: parseFloat(result.lat),
-            lng: parseFloat(result.lon),
-          }))
-
-        if (results.length > 0) return results
+        return data
       } catch (err) {
         if (attempt === retries - 1) {
-          console.error("[v0] Location fetch failed after retries:", err)
+          console.error("[v0] Location fetch failed:", err)
         } else {
-          await new Promise(r => setTimeout(r, 500)) // Wait before retry
+          await new Promise(r => setTimeout(r, 300))
         }
       }
     }
     return []
-  }
-
-  // Get suggestions for source/destination
-  const getSuggestions = async (query: string): Promise<LocationSuggestion[]> => {
-    if (!query.trim()) {
-      // Return empty array, will be populated on focus
-      return []
-    }
-
-    const filtered = await fetchRealLocations(query)
-
-    return filtered.map(loc => ({
-      ...loc,
-      category: "recent" as const,
-    }))
   }
 
   useEffect(() => {
