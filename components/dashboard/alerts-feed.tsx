@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Cloud, Car, Ship, AlertTriangle, ChevronDown, ChevronUp, X } from "lucide-react"
+import { Cloud, Car, AlertTriangle, ChevronDown, ChevronUp, X } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -15,7 +15,7 @@ interface Alert {
   title: string
   description: string
   severity: "critical" | "warning" | "info"
-  source: "Weather" | "Traffic" | "News" | "Port"
+  source: "Weather" | "Traffic"
   timestamp: string
   details?: string
 }
@@ -41,15 +41,6 @@ const alerts: Alert[] = [
   },
   {
     id: "3",
-    title: "Port congestion at Chennai",
-    description: "Container backlog causing 8-12 hour delays",
-    severity: "warning",
-    source: "Port",
-    timestamp: "1 hr ago",
-    details: "Due to increased import volume and labor shortages, vessel berthing delays are expected. Ships arriving before May 8th may experience extended wait times.",
-  },
-  {
-    id: "4",
     title: "Heavy rainfall advisory",
     description: "100-150mm expected along NH-65 corridor",
     severity: "warning",
@@ -57,22 +48,11 @@ const alerts: Alert[] = [
     timestamp: "2 hrs ago",
     details: "Southwest monsoon activity intensifying. Road conditions may deteriorate. Recommend postponing non-urgent shipments by 24 hours.",
   },
-  {
-    id: "5",
-    title: "New toll plaza operational",
-    description: "FASTag mandatory at Chittoor checkpoint",
-    severity: "info",
-    source: "News",
-    timestamp: "4 hrs ago",
-    details: "Starting May 6th, the new electronic toll plaza at Chittoor will be fully operational. Vehicles without FASTag will face 2x charges and potential delays.",
-  },
 ]
 
 const sourceIcons = {
   Weather: Cloud,
   Traffic: Car,
-  News: AlertTriangle,
-  Port: Ship,
 }
 
 const severityStyles = {
