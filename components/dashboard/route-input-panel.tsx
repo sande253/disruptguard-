@@ -51,29 +51,51 @@ export function RouteInputPanel({ onAnalyze, isLoading }: RouteInputPanelProps) 
   const destRef = useRef<HTMLDivElement>(null)
   const stopRef = useRef<HTMLDivElement>(null)
 
-  // Fetch real locations from Nominatim API
-  const fetchRealLocations = async (query: string): Promise<LocationSuggestion[]> => {
-    if (!query.trim() || query.length < 2) return []
+  // Fetch real locations from Nominatim API with retry logic
+  const fetchRealLocations = async (query: string, retries = 3): Promise<LocationSuggestion[]> => {
+    if (!query.trim() || query.length < 1) return []
 
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=in&format=json&limit=20`,
-        { headers: { "Accept-Language": "en" } }
-      )
-      const data = await response.json()
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
 
-      return data.map((result: any) => ({
-        name: result.name || result.display_name.split(",")[0],
-        region: result.address?.state || result.address?.province || "India",
-        type: result.type === "port" || result.type === "harbour" ? "port" : "city",
-        category: "recent" as const,
-        lat: parseFloat(result.lat),
-        lng: parseFloat(result.lon),
-      }))
-    } catch (err) {
-      console.error("Error fetching locations:", err)
-      return []
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=in&format=json&limit=50&addressdetails=1`,
+          { 
+            headers: { "Accept-Language": "en" },
+            signal: controller.signal
+          }
+        )
+        clearTimeout(timeoutId)
+
+        if (!response.ok) throw new Error(`API error: ${response.status}`)
+        
+        const data = await response.json()
+        
+        if (!Array.isArray(data)) return []
+
+        const results = data
+          .filter((result: any) => result.lat && result.lon)
+          .map((result: any) => ({
+            name: result.name || result.display_name.split(",")[0],
+            region: result.address?.state || result.address?.province || "India",
+            type: result.type === "port" || result.type === "harbour" ? "port" : "city",
+            category: "recent" as const,
+            lat: parseFloat(result.lat),
+            lng: parseFloat(result.lon),
+          }))
+
+        if (results.length > 0) return results
+      } catch (err) {
+        if (attempt === retries - 1) {
+          console.error("[v0] Location fetch failed after retries:", err)
+        } else {
+          await new Promise(r => setTimeout(r, 500)) // Wait before retry
+        }
+      }
     }
+    return []
   }
 
   // Get suggestions for source/destination

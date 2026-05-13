@@ -12,6 +12,7 @@ import { useTruckStopsLayer } from "./truck-stops-layer"
 interface IndiaRouteMapProps {
   source: string | null
   destination: string | null
+  stops?: Array<{ name: string; lat: number; lng: number }> | null
   isLoading?: boolean
 }
 

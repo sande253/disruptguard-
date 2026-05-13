@@ -16,8 +16,8 @@ import { useRoute } from "@/contexts/route-context"
 export default function DashboardPage() {
   const { route, isAnalyzing, hasAnalyzed, analyzeRoute } = useRoute()
 
-  const handleAnalyze = (source: string, destination: string, mode: string) => {
-    analyzeRoute(source, destination, mode as "Road" | "Rail" | "Sea")
+  const handleAnalyze = (source: string, destination: string, mode: string, stops?: any[]) => {
+    analyzeRoute(source, destination, mode as "Road" | "Rail" | "Sea", stops)
   }
 
   return (
@@ -55,7 +55,8 @@ export default function DashboardPage() {
               <div className="lg:col-span-2">
                 <IndiaRouteMap 
                   source={route?.origin ?? null} 
-                  destination={route?.destination ?? null} 
+                  destination={route?.destination ?? null}
+                  stops={route?.stops ?? null}
                   isLoading={isAnalyzing}
                 />
               </div>

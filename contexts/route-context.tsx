@@ -8,6 +8,7 @@ export interface RouteData {
   origin: string
   destination: string
   mode: "Road" | "Rail" | "Sea"
+  stops?: Array<{ name: string; lat: number; lng: number }>
 }
 
 export interface OptimizedMetrics {
@@ -57,7 +58,7 @@ interface RouteContextType {
   optimizationMode: OptimizationMode
   metrics: OptimizedMetrics
   setRoute: (route: RouteData) => void
-  analyzeRoute: (origin: string, destination: string, mode: "Road" | "Rail" | "Sea") => void
+  analyzeRoute: (origin: string, destination: string, mode: "Road" | "Rail" | "Sea", stops?: Array<{ name: string; lat: number; lng: number }>) => void
   clearRoute: () => void
   setOptimizationMode: (mode: OptimizationMode) => void
 }
@@ -77,14 +78,14 @@ export function RouteProvider({ children }: { children: ReactNode }) {
     setHasAnalyzed(true)
   }
 
-  const analyzeRoute = (origin: string, destination: string, mode: "Road" | "Rail" | "Sea") => {
+  const analyzeRoute = (origin: string, destination: string, mode: "Road" | "Rail" | "Sea", stops?: Array<{ name: string; lat: number; lng: number }>) => {
     setIsAnalyzing(true)
     // Clear previous data while loading
     setHasAnalyzed(false)
     
     // Simulate API call
     setTimeout(() => {
-      setRouteState({ origin, destination, mode })
+      setRouteState({ origin, destination, mode, stops })
       setIsAnalyzing(false)
       setHasAnalyzed(true)
     }, 1500)
