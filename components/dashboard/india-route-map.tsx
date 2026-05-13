@@ -100,7 +100,7 @@ function calculateDistance(start: [number, number], end: [number, number]): numb
   return Math.round(R * c)
 }
 
-export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaRouteMapProps) {
+export function IndiaRouteMap({ source, destination, stops, isLoading = false }: IndiaRouteMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<mapboxgl.Map | null>(null)
   const markersRef = useRef<mapboxgl.Marker[]>([])
@@ -189,12 +189,36 @@ export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaR
       return
     }
 
-    // Calculate distance
-    const distance = calculateDistance(sourceCoords, destCoords)
-    setRouteDistance(distance)
+    // Build waypoints array including stops
+    const allWaypoints: [number, number][] = [sourceCoords]
+    
+    // Add stops in order if they have valid coordinates
+    if (stops && stops.length > 0) {
+      stops.forEach(stop => {
+        if (stop.lat && stop.lng) {
+          allWaypoints.push([stop.lng, stop.lat])
+        }
+      })
+    }
+    
+    allWaypoints.push(destCoords)
 
-    // Get curved route points
-    const routePoints = getRoutePoints(sourceCoords, destCoords)
+    // Calculate total distance through all waypoints
+    let totalDistance = 0
+    for (let i = 0; i < allWaypoints.length - 1; i++) {
+      totalDistance += calculateDistance(allWaypoints[i], allWaypoints[i + 1])
+    }
+    setRouteDistance(totalDistance)
+
+    // Get curved route points through all waypoints
+    let allRoutePoints: [number, number][] = []
+    for (let i = 0; i < allWaypoints.length - 1; i++) {
+      const segmentPoints = getRoutePoints(allWaypoints[i], allWaypoints[i + 1])
+      // Remove last point to avoid duplication
+      allRoutePoints = allRoutePoints.concat(segmentPoints.slice(0, -1))
+    }
+    // Add final point
+    allRoutePoints.push(allWaypoints[allWaypoints.length - 1])
 
     // Add route source
     map.current.addSource("route", {
@@ -204,7 +228,7 @@ export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaR
         properties: {},
         geometry: {
           type: "LineString",
-          coordinates: routePoints,
+          coordinates: allRoutePoints,
         },
       },
     })
@@ -251,6 +275,21 @@ export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaR
       .addTo(map.current)
     markersRef.current.push(originMarker)
 
+    // Add stop markers (orange/yellow)
+    if (stops && stops.length > 0) {
+      stops.forEach((stop, idx) => {
+        if (stop.lat && stop.lng) {
+          const stopMarker = new mapboxgl.Marker({
+            color: "#f59e0b",
+          })
+            .setLngLat([stop.lng, stop.lat])
+            .setPopup(new mapboxgl.Popup().setHTML(`<strong>${stop.name}</strong><br/>Stop ${idx + 1}`))
+            .addTo(map.current!)
+          markersRef.current.push(stopMarker)
+        }
+      })
+    }
+
     // Add destination marker (cyan)
     const destMarker = new mapboxgl.Marker({
       color: "#06b6d4",
@@ -260,15 +299,14 @@ export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaR
       .addTo(map.current)
     markersRef.current.push(destMarker)
 
-    // Fit bounds to show the entire route
+    // Fit bounds to show the entire route including all waypoints
     const bounds = new mapboxgl.LngLatBounds()
-    bounds.extend(sourceCoords)
-    bounds.extend(destCoords)
+    allWaypoints.forEach(point => bounds.extend(point))
     map.current.fitBounds(bounds, {
       padding: 80,
       duration: 1000,
     })
-  }, [source, destination, mapLoaded])
+  }, [source, destination, stops, mapLoaded])
 
   const showLoading = isLoading || !mapLoaded
 
