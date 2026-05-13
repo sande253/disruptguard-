@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -23,6 +23,9 @@ import {
   Search,
   RefreshCw,
   MessageSquare,
+  Fuel,
+  Coffee,
+  DollarSign,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -43,6 +46,46 @@ interface Shipment {
   humidity?: number
   alerts: string[]
 }
+
+interface TruckStop {
+  id: string
+  name: string
+  distance: number
+  rating: number
+  amenities: string[]
+  fuelPrice?: number
+  parking: boolean
+}
+
+const nearbyTruckStops: TruckStop[] = [
+  {
+    id: "ts1",
+    name: "Nellore Truck Stop",
+    distance: 15,
+    rating: 4.2,
+    amenities: ["WiFi", "Restaurant", "Shower", "Parking"],
+    fuelPrice: 98.50,
+    parking: true,
+  },
+  {
+    id: "ts2",
+    name: "IOCL Fuel Station",
+    distance: 22,
+    rating: 4.0,
+    amenities: ["Fuel", "Washroom", "Quick Bite"],
+    fuelPrice: 97.80,
+    parking: true,
+  },
+  {
+    id: "ts3",
+    name: "Rest Haven",
+    distance: 28,
+    rating: 4.5,
+    amenities: ["Restaurant", "Lodging", "Fuel", "Maintenance"],
+    fuelPrice: 99.10,
+    parking: true,
+  },
+]
 
 const shipments: Shipment[] = [
   {
@@ -387,6 +430,40 @@ export default function TrackingPage() {
                       <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                       <p className="text-sm text-muted-foreground">Live map view</p>
                       <p className="text-xs text-muted-foreground">GPS tracking active</p>
+                    </div>
+                  </div>
+
+                  {/* Nearby Truck Stops & Fuel */}
+                  <div>
+                    <p className="text-sm font-medium text-foreground mb-3">Nearby Truck Stops & Fuel</p>
+                    <div className="space-y-2">
+                      {nearbyTruckStops.map((stop) => (
+                        <div key={stop.id} className="p-3 rounded-lg bg-secondary/40 border border-border/50 hover:border-primary/30 transition-colors">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <p className="text-sm font-medium text-foreground">{stop.name}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <MapPin className="h-3 w-3 text-muted-foreground" />
+                                <span className="text-xs text-muted-foreground">{stop.distance} km away</span>
+                                <span className="text-xs text-muted-foreground">★ {stop.rating}</span>
+                              </div>
+                            </div>
+                            {stop.fuelPrice && (
+                              <div className="text-right">
+                                <Fuel className="h-4 w-4 text-risk-moderate mb-1" />
+                                <p className="text-xs font-medium text-foreground">₹{stop.fuelPrice}/L</p>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {stop.amenities.map((amenity) => (
+                              <Badge key={amenity} variant="outline" className="text-[10px] px-2 py-0.5">
+                                {amenity}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </CardContent>
