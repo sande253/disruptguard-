@@ -5,7 +5,9 @@ import { motion, AnimatePresence } from "framer-motion"
 import mapboxgl from "mapbox-gl"
 import "mapbox-gl/dist/mapbox-gl.css"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { MapPin, Loader2 } from "lucide-react"
+import { MapPin, Loader2, Fuel, MapPin as TruckStopIcon } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { useTruckStopsLayer, TRUCK_STOPS, FUEL_PUMPS } from "./truck-stops-layer"
 
 interface IndiaRouteMapProps {
   source: string | null
@@ -104,6 +106,7 @@ export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaR
   const [mapLoaded, setMapLoaded] = useState(false)
   const [routeDistance, setRouteDistance] = useState<number | null>(null)
   const [routeError, setRouteError] = useState<string | null>(null)
+  const { visibleStops, visiblePumps, showTruckStops, setShowTruckStops, showFuelPumps, setShowFuelPumps } = useTruckStopsLayer()
 
   const hasRoute = source && destination
 
@@ -126,6 +129,10 @@ export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaR
 
     map.current.on("load", () => {
       setMapLoaded(true)
+      
+      // Add truck stops layer
+      addTruckStopsLayer()
+      addFuelPumpsLayer()
     })
 
     return () => {
@@ -258,13 +265,134 @@ export function IndiaRouteMap({ source, destination, isLoading = false }: IndiaR
 
   const showLoading = isLoading || !mapLoaded
 
+  // Add truck stops layer to map
+  const addTruckStopsLayer = () => {
+    if (!map.current || !showTruckStops) return
+
+    const geojson = {
+      type: "FeatureCollection" as const,
+      features: TRUCK_STOPS.map(stop => ({
+        type: "Feature" as const,
+        properties: {
+          title: stop.name,
+          type: stop.type,
+        },
+        geometry: {
+          type: "Point" as const,
+          coordinates: [stop.longitude, stop.latitude],
+        },
+      })),
+    }
+
+    if (!map.current.getSource("truck-stops")) {
+      map.current.addSource("truck-stops", {
+        type: "geojson",
+        data: geojson as any,
+      })
+
+      map.current.addLayer({
+        id: "truck-stops",
+        type: "circle",
+        source: "truck-stops",
+        paint: {
+          "circle-radius": 6,
+          "circle-color": "#f59e0b",
+          "circle-opacity": 0.8,
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#fff",
+        },
+      })
+    }
+  }
+
+  // Add fuel pumps layer to map
+  const addFuelPumpsLayer = () => {
+    if (!map.current || !showFuelPumps) return
+
+    const geojson = {
+      type: "FeatureCollection" as const,
+      features: FUEL_PUMPS.map(pump => ({
+        type: "Feature" as const,
+        properties: {
+          title: pump.name,
+          fuel: pump.fuelTypes.join(", "),
+        },
+        geometry: {
+          type: "Point" as const,
+          coordinates: [pump.longitude, pump.latitude],
+        },
+      })),
+    }
+
+    if (!map.current.getSource("fuel-pumps")) {
+      map.current.addSource("fuel-pumps", {
+        type: "geojson",
+        data: geojson as any,
+      })
+
+      map.current.addLayer({
+        id: "fuel-pumps",
+        type: "circle",
+        source: "fuel-pumps",
+        paint: {
+          "circle-radius": 5,
+          "circle-color": "#ef4444",
+          "circle-opacity": 0.8,
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#fff",
+        },
+      })
+    }
+  }
+
+  // Update layers when visibility changes
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return
+
+    if (showTruckStops && !map.current.getLayer("truck-stops")) {
+      addTruckStopsLayer()
+    } else if (!showTruckStops && map.current.getLayer("truck-stops")) {
+      map.current.removeLayer("truck-stops")
+      map.current.removeSource("truck-stops")
+    }
+
+    if (showFuelPumps && !map.current.getLayer("fuel-pumps")) {
+      addFuelPumpsLayer()
+    } else if (!showFuelPumps && map.current.getLayer("fuel-pumps")) {
+      map.current.removeLayer("fuel-pumps")
+      map.current.removeSource("fuel-pumps")
+    }
+  }, [showTruckStops, showFuelPumps, mapLoaded])
+
   return (
     <Card className="bg-card border-border">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <MapPin className="h-5 w-5 text-primary" />
-          India Route Map
-        </CardTitle>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <MapPin className="h-5 w-5 text-primary" />
+            India Route Map
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            <Button 
+              size="sm" 
+              variant={showTruckStops ? "default" : "outline"}
+              className="h-7 text-xs gap-1"
+              onClick={() => setShowTruckStops(!showTruckStops)}
+            >
+              <TruckStopIcon className="h-3.5 w-3.5" />
+              Truck Stops
+            </Button>
+            <Button 
+              size="sm" 
+              variant={showFuelPumps ? "default" : "outline"}
+              className="h-7 text-xs gap-1"
+              onClick={() => setShowFuelPumps(!showFuelPumps)}
+            >
+              <Fuel className="h-3.5 w-3.5" />
+              Fuel
+            </Button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="relative h-[520px] w-full rounded-xl overflow-hidden bg-slate-900">
