@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Search, MapPin, ArrowRight, Loader2, Truck, Train, Ship, Clock, TrendingUp } from "lucide-react"
+import { Search, MapPin, ArrowRight, Loader2, Truck, Train, Ship, Clock, TrendingUp, Plus, X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 
 interface RouteInputPanelProps {
-  onAnalyze: (source: string, destination: string, mode: string) => void
+  onAnalyze: (source: string, destination: string, mode: string, stops?: LocationSuggestion[]) => void
   isLoading: boolean
 }
 
@@ -38,13 +38,18 @@ interface LocationSuggestion {
 export function RouteInputPanel({ onAnalyze, isLoading }: RouteInputPanelProps) {
   const [source, setSource] = useState("")
   const [destination, setDestination] = useState("")
+  const [stops, setStops] = useState<LocationSuggestion[]>([])
   const [transportMode, setTransportMode] = useState("")
   const [sourceSuggestions, setSourceSuggestions] = useState<LocationSuggestion[]>([])
   const [destSuggestions, setDestSuggestions] = useState<LocationSuggestion[]>([])
+  const [stopSuggestions, setStopSuggestions] = useState<LocationSuggestion[]>([])
+  const [activeStopInput, setActiveStopInput] = useState<string>("")
   const [showSourceDropdown, setShowSourceDropdown] = useState(false)
   const [showDestDropdown, setShowDestDropdown] = useState(false)
+  const [showStopDropdown, setShowStopDropdown] = useState(false)
   const sourceRef = useRef<HTMLDivElement>(null)
   const destRef = useRef<HTMLDivElement>(null)
+  const stopRef = useRef<HTMLDivElement>(null)
 
   // Fetch real locations from Nominatim API
   const fetchRealLocations = async (query: string): Promise<LocationSuggestion[]> => {
@@ -129,8 +134,18 @@ export function RouteInputPanel({ onAnalyze, isLoading }: RouteInputPanelProps) 
 
   const handleAnalyze = () => {
     if (source && destination && transportMode) {
-      onAnalyze(source, destination, transportMode)
+      onAnalyze(source, destination, transportMode, stops.length > 0 ? stops : undefined)
     }
+  }
+
+  const handleAddStop = (suggestion: LocationSuggestion) => {
+    setStops([...stops, suggestion])
+    setActiveStopInput("")
+    setShowStopDropdown(false)
+  }
+
+  const handleRemoveStop = (index: number) => {
+    setStops(stops.filter((_, i) => i !== index))
   }
 
   const handleSelectSource = (suggestion: LocationSuggestion) => {
