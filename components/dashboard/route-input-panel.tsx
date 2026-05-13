@@ -26,30 +26,13 @@ const transportModes = [
   { value: "sea", label: "Sea", icon: Ship },
 ]
 
-// Mock location suggestions
-const allLocations = [
-  { name: "Chennai", region: "Tamil Nadu", type: "port" },
-  { name: "Delhi", region: "NCR", type: "city" },
-  { name: "Mumbai", region: "Maharashtra", type: "port" },
-  { name: "Bangalore", region: "Karnataka", type: "city" },
-  { name: "Hyderabad", region: "Telangana", type: "city" },
-  { name: "Kolkata", region: "West Bengal", type: "port" },
-  { name: "Pune", region: "Maharashtra", type: "city" },
-  { name: "Ahmedabad", region: "Gujarat", type: "city" },
-  { name: "Surat", region: "Gujarat", type: "city" },
-  { name: "Jaipur", region: "Rajasthan", type: "city" },
-  { name: "Lucknow", region: "Uttar Pradesh", type: "city" },
-  { name: "Kochi", region: "Kerala", type: "port" },
-  { name: "Chandigarh", region: "Punjab", type: "city" },
-  { name: "Coimbatore", region: "Tamil Nadu", type: "city" },
-  { name: "Vizag", region: "Andhra Pradesh", type: "port" },
-]
-
 interface LocationSuggestion {
   name: string
   region: string
   type: "port" | "city"
   category: "recent" | "nearby" | "trending"
+  lat?: number
+  lng?: number
 }
 
 export function RouteInputPanel({ onAnalyze, isLoading }: RouteInputPanelProps) {
@@ -63,21 +46,39 @@ export function RouteInputPanel({ onAnalyze, isLoading }: RouteInputPanelProps) 
   const sourceRef = useRef<HTMLDivElement>(null)
   const destRef = useRef<HTMLDivElement>(null)
 
+  // Fetch real locations from Nominatim API
+  const fetchRealLocations = async (query: string): Promise<LocationSuggestion[]> => {
+    if (!query.trim() || query.length < 2) return []
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=in&format=json&limit=20`,
+        { headers: { "Accept-Language": "en" } }
+      )
+      const data = await response.json()
+
+      return data.map((result: any) => ({
+        name: result.name || result.display_name.split(",")[0],
+        region: result.address?.state || result.address?.province || "India",
+        type: result.type === "port" || result.type === "harbour" ? "port" : "city",
+        category: "recent" as const,
+        lat: parseFloat(result.lat),
+        lng: parseFloat(result.lon),
+      }))
+    } catch (err) {
+      console.error("Error fetching locations:", err)
+      return []
+    }
+  }
+
   // Get suggestions for source/destination
-  const getSuggestions = (query: string): LocationSuggestion[] => {
+  const getSuggestions = async (query: string): Promise<LocationSuggestion[]> => {
     if (!query.trim()) {
-      return [
-        { name: "Chennai", region: "Tamil Nadu", type: "port", category: "recent" },
-        { name: "Mumbai", region: "Maharashtra", type: "port", category: "recent" },
-        { name: "Delhi", region: "NCR", type: "city", category: "trending" },
-        { name: "Bangalore", region: "Karnataka", type: "city", category: "trending" },
-      ]
+      // Return empty array, will be populated on focus
+      return []
     }
 
-    const filtered = allLocations.filter(loc =>
-      loc.name.toLowerCase().includes(query.toLowerCase()) ||
-      loc.region.toLowerCase().includes(query.toLowerCase())
-    )
+    const filtered = await fetchRealLocations(query)
 
     return filtered.map(loc => ({
       ...loc,
@@ -86,21 +87,29 @@ export function RouteInputPanel({ onAnalyze, isLoading }: RouteInputPanelProps) 
   }
 
   useEffect(() => {
-    if (source) {
-      setSourceSuggestions(getSuggestions(source))
-      setShowSourceDropdown(true)
-    } else {
-      setShowSourceDropdown(false)
+    const loadSuggestions = async () => {
+      if (source) {
+        const suggestions = await fetchRealLocations(source)
+        setSourceSuggestions(suggestions)
+        setShowSourceDropdown(true)
+      } else {
+        setShowSourceDropdown(false)
+      }
     }
+    loadSuggestions()
   }, [source])
 
   useEffect(() => {
-    if (destination) {
-      setDestSuggestions(getSuggestions(destination))
-      setShowDestDropdown(true)
-    } else {
-      setShowDestDropdown(false)
+    const loadSuggestions = async () => {
+      if (destination) {
+        const suggestions = await fetchRealLocations(destination)
+        setDestSuggestions(suggestions)
+        setShowDestDropdown(true)
+      } else {
+        setShowDestDropdown(false)
+      }
     }
+    loadSuggestions()
   }, [destination])
 
   // Close dropdowns when clicking outside
